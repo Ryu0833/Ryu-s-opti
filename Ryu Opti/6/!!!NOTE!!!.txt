@@ -1,0 +1,13 @@
+
+rani nahder 3la MPO w HAGS Fix
+
+RTX 20/30/40/50 test w chof ida takhdm 
+
+rx 5000/6000/7000/9000 dirah ida dir stream wala t7ass bel lag w stutter w test w chof (HAGS maykhdmch fel rx 5000)
+
+vega w rx 400/500 diroha t3awn bzef (HAGS maykhdmch)
+ 
+
+FOR AMD GPUS  
+"AMD Shader Cache" daymne on kolma dir driver jdid 
+"AMD ULPS" off w test 
