@@ -309,7 +309,7 @@ REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdclass\Parameter
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 :: DirectX Kernel Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000001f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 :: USB Controller Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
@@ -411,14 +411,14 @@ exit /b
 cls
 echo Nvidia...
 :: Nvidia GPU Driver Priority Boost
- REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000001f /f >nul
+ REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 goto exitmsg
 
 :amd
 cls
 echo AMD...
 :: AMD GPU Driver Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000001f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 goto exitmsg
 
