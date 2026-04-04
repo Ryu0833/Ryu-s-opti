@@ -1,4 +1,5 @@
 @Echo Off
+call :IsAdmin
 
 echo rak baghi dir opti ta3i ?
 echo  1 - yes
@@ -315,11 +316,11 @@ REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\dxgmms2\Parameters
 :: USB Controller Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 goto next1
 
@@ -420,6 +421,7 @@ cls
 echo AMD...
 :: AMD GPU Driver Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 goto exitmsg
 
