@@ -84,6 +84,16 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Param
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f 
 
+bcdedit /set x2apicpolicy Enable
+
+bcdedit /set configaccesspolicy Default
+
+bcdedit /set MSI Default
+
+bcdedit /set usephysicaldestination No
+
+bcdedit /set usefirmwarepcisettings No
+
 bcdedit /deletevalue disabledynamictick 
 ::bcdedit /set useplatformclock false
 bcdedit /deletevalue useplatformclock
