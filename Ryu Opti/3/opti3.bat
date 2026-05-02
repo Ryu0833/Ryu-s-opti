@@ -331,6 +331,9 @@ for /f "tokens=*" %%K in ('reg query "%KEY%"') do (
 
 ::goto exitmsg
 
+:: Audio Priority Boost
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HDAudBus\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+
 :: Mouse Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
