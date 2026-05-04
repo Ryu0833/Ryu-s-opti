@@ -1,0 +1,10 @@
+hado homa li ta7tajhom ktar fle gaming en general 
+"GPU" and "GPU-bridge" "High" 
+
+(tip:sayi clavier w mouse madirhomch f nafs bridge farkthm 3la "USB HUB")
+
+hado zidhon ida rak fle compititf game(mchi obligie)
+
+1-"USB" and "USB-bridge" "High" (9ader ykoun bzf ta3 bridge li fihom "USB" chof wine rak mrak clavier w mouse)
+2-"NETWORK" set to "Normal" (bridge ta3ha generalment ykoun m3a wa7d mal "USB HUB")
+
