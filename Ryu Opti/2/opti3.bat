@@ -51,7 +51,7 @@ netsh int tcp set supplemental Template=Compat CongestionProvider=ctcp
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=ctcp
 netsh int tcp set supplemental Template=InternetCustom CongestionProvider=ctcp
 
-netsh int tcp set global rsc=enabled 
+netsh int tcp set global rsc=disabled 
 netsh int tcp set global rss=enabled 
 netsh int tcp set global dca=enabled 
 netsh int tcp set global timestamps=disabled 
@@ -92,15 +92,15 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Param
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f 
 
-bcdedit /set x2apicpolicy Enable
+::bcdedit /set x2apicpolicy Enable
 
-bcdedit /set configaccesspolicy Default
+::bcdedit /set configaccesspolicy Default
 
-bcdedit /set MSI Default
+::bcdedit /set MSI Default
 
-bcdedit /set usephysicaldestination No
+::bcdedit /set usephysicaldestination No
 
-bcdedit /set usefirmwarepcisettings No
+::bcdedit /set usefirmwarepcisettings No
 
 bcdedit /deletevalue disabledynamictick 
 ::bcdedit /set useplatformclock false
