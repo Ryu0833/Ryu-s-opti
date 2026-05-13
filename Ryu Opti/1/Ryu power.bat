@@ -12,6 +12,34 @@ if "%choice%"=="1" goto power
 if "%choice%"=="2" goto exit
 
 :power
+:: Check if "Ryu powerplan" already exists
+set "GUID="
+
+for /f "tokens=*" %%L in ('powercfg -list') do (
+    echo %%L | findstr /i "Ryu Powerplan" >nul 2>&1
+    if !errorlevel!==0 (
+        for /f "tokens=4" %%G in ("%%L") do (
+            set "GUID=%%G"
+            set "GUID=!GUID:(=!"
+            set "GUID=!GUID:)=!"
+        )
+    )
+)
+
+if defined GUID (
+    powercfg -setactive !GUID!
+) else (
+    echo [INFO] Creating new Ryu powerplan...
+    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
+    set "GUID=!GUID:(=!"
+    set "GUID=!GUID:)=!"
+    echo Detected GUID = !GUID!
+    powercfg -changename !GUID! "Ryu Powerplan"
+    powercfg -setactive !GUID!
+)
+goto power0
+
+:power0
 powercfg -setacvalueindex SCHEME_CURRENT 48672f38-7a9a-4bb2-8bf8-3d85be19de4e 2bfc24f9-5ea2-4801-8213-3dbae01aa39d 0
 powercfg -setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0
 powercfg -setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 d4e98f31-5ffe-4ce1-be31-1b38b384c009 0
