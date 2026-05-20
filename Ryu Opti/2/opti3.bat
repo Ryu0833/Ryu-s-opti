@@ -271,12 +271,12 @@ Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold2" /t REG_SZ /d "0" /f
 
 for /f "tokens=*" %%i in ('@powershell -command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name"') do set NIC=%%i
 
-netsh interface ipv4 set dnsservers name="%NIC%" static 8.8.8.8 primary
-netsh interface ipv4 add dnsservers name="%NIC%" 8.8.4.4 index=2
+netsh interface ipv4 set dnsservers name="%NIC%" static 1.1.1.1 primary
+netsh interface ipv4 add dnsservers name="%NIC%" 1.0.0.1 index=2
 
 @powershell -command "Get-NetAdapterRss -Name '%NIC%' | Format-List"
 
-@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 2"
+@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 4"
 
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
