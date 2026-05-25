@@ -92,15 +92,15 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Param
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f 
 
-::bcdedit /set x2apicpolicy Enable
+bcdedit /set x2apicpolicy Enable
 
-::bcdedit /set configaccesspolicy Default
+bcdedit /set configaccesspolicy Default
 
-::bcdedit /set MSI Default
+bcdedit /set MSI Default
 
-::bcdedit /set usephysicaldestination No
+bcdedit /set usephysicaldestination No
 
-::bcdedit /set usefirmwarepcisettings No
+bcdedit /set usefirmwarepcisettings No
 
 bcdedit /deletevalue disabledynamictick 
 ::bcdedit /set useplatformclock false
@@ -253,6 +253,9 @@ gpupdate /force
 
 endlocal
 
+
+
+Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicWebHelper.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "2" /f
 Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\discord.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "5" /f
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "4" /f
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
