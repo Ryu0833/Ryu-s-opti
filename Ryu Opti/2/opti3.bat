@@ -15,12 +15,17 @@ if "%choice%"=="2" goto exitmsg
 
 @powerShell -command "Disable-MMAgent -mc"
 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "TurnOffWindowsAnimations" /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarAnimations" /t REG_DWORD /d 0 /f
+
+reg add "HKLM\SOFTWARE\Microsoft\Input" /v "InputServiceEnabled" /t REG_DWORD /d 0 /f
+
 reg add "HKLM\SOFTWARE\Microsoft\Input" /v "InputServiceEnabled" /t REG_DWORD /d 0 /f
 reg add "HKLM\SOFTWARE\Microsoft\Input" /v "InputServiceEnabledForCCI" /t REG_DWORD /d 0 /f
 
 ::reg add "HKLM\SYSTEM\CurrentControlSet\Services\TextInputManagementService\Parameters" /v "ServiceDll" /t REG_EXPAND_SZ /d %SystemRoot%\System32\MSCTF.dll /f
 
-reg add "HKEY_CURRENT_USER\Software\Microsoft\GameBar" /v "AutoGameModeEnabled" /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\GameBar" /v "AutoGameModeEnabled" /t REG_DWORD /d 1 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy" /v LetAppsRunInBackground /t REG_DWORD /d 0 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\fssProv" /v "EncryptProtocol" /t REG_DWORD /d "0" /f
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule" /v "DisableRpcOver" /t REG_DWORD /d "1" /f
@@ -232,7 +237,7 @@ for /L %%i in (0,1,9) do (
 
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "3" /f
-    Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
+    ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "PagePriority" /t REG_DWORD /d "5" /f
 
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /f
@@ -458,15 +463,15 @@ exit /b
 cls
 echo Nvidia...
 :: Nvidia GPU Driver Priority Boost
- REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+ REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 goto exitmsg
 
 :amd
 cls
 echo AMD...
 :: AMD GPU Driver Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 
 goto exitmsg
 
@@ -474,7 +479,7 @@ goto exitmsg
 cls
 echo Intel...
 :: INTEL GPU Driver Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
 goto exitmsg
 
 :restor
