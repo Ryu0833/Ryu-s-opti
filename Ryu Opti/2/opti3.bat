@@ -238,7 +238,7 @@ for /L %%i in (0,1,9) do (
 
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "3" /f
-    ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
+    Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "PagePriority" /t REG_DWORD /d "5" /f
 
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /f
