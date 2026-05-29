@@ -71,6 +71,7 @@ netsh int tcp set global maxsynretransmissions=2
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Power Saving Mode' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Energy-Efficient Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }" 
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'EEE Max Support Speed' -DisplayValue '10 Mbps Full Duplex' -ErrorAction SilentlyContinue }" 
+@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
 @powershell -command "Set-NetOffloadGlobalSetting -Chimney 'Disabled'"
 @powershell -command "Set-NetOffloadGlobalSetting -TaskOffload 'Enabled'"
 @powershell -command "Set-NetOffloadGlobalSetting -ReceiveSideScaling 'Enabled'"
