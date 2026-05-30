@@ -289,7 +289,7 @@ netsh interface ipv4 add dnsservers name="%NIC%" 1.0.0.1 index=2
 
 @powershell -command "Get-NetAdapterRss -Name '%NIC%' | Format-List"
 
-@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 4"
+@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 2"
 
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
@@ -350,32 +350,32 @@ for /f "tokens=*" %%K in ('reg query "%KEY%"') do (
 ::goto exitmsg
 
 :: Audio Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HDAudBus\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HDAudBus\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 :: Mouse Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 
 :: Keyboard Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdhid\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 :: DirectX Kernel Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\dxgmms2\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\dxgmms2\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 :: USB Controller Priority Boost
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 
-::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 goto next1
 
@@ -468,15 +468,15 @@ exit /b
 cls
 echo Nvidia...
 :: Nvidia GPU Driver Priority Boost
- REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+ REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 goto exitmsg
 
 :amd
 cls
 echo AMD...
 :: AMD GPU Driver Priority Boost
-REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
-REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
 goto exitmsg
 
@@ -484,7 +484,7 @@ goto exitmsg
 cls
 echo Intel...
 :: INTEL GPU Driver Priority Boost
-REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /t REG_DWORD /d 0x0000000f /f >nul
+REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 goto exitmsg
 
 :restor
