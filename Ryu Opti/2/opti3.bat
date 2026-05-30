@@ -56,7 +56,7 @@ netsh int tcp set supplemental Template=Compat CongestionProvider=ctcp
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=ctcp
 netsh int tcp set supplemental Template=InternetCustom CongestionProvider=ctcp
 
-netsh int tcp set global rsc=disabled 
+netsh int tcp set global rsc=enabled 
 netsh int tcp set global rss=enabled 
 netsh int tcp set global dca=enabled 
 netsh int tcp set global timestamps=disabled 
@@ -78,7 +78,7 @@ netsh int tcp set global maxsynretransmissions=2
 @powershell -command "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing 'Enabled'"
 @powershell -command "Set-NetOffloadGlobalSetting -PacketCoalescingFilter 'Enabled' "
 ::@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
-@powershell -command "Disable-NetAdapterRsc -Name * "
+@powershell -command "Enabled-NetAdapterRsc -Name * "
 ::@powershell -command "Disable-NetAdapterLso -Name *"
 @powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -MinRto '300'" 
 @powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -InitialCongestionWindow '10'" 
