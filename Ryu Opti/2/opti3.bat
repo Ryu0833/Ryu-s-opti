@@ -32,12 +32,7 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule" /v "Disable
 
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Reliability" /v "TimeStampInterval " /t REG_DWORD /d "1" /f
 
-
-ipconfig/release
-ipconfig/Renew
-ipconfig/flushdns
-
-netsh interface tcp set global autotuninglevel=restricted
+netsh interface tcp set global autotuninglevel=highlyrestricted
 netsh interface ipv4 set subinterface "Ethernet" mtu=1492 store=persistent
 netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
 
@@ -356,6 +351,10 @@ for /f "tokens=*" %%K in ('reg query "%KEY%"') do (
 ::sfc /scannow
 
 ::goto exitmsg
+
+ipconfig/release
+ipconfig/Renew
+ipconfig/flushdns
 
 :: Audio Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HDAudBus\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
