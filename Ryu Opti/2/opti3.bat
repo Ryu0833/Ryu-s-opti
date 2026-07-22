@@ -334,6 +334,21 @@ for /f "tokens=*" %%K in ('reg query "%KEY%"') do (
 
 )
 
+endlocal
+
+setlocal EnableExtensions EnableDelayedExpansion
+
+FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{36fc9e60-c465-11cf-8056-444553540000}"') DO (
+    FOR /F "tokens=*" %%I IN ('reg query "%%D" 2^>NUL') DO (
+
+        REG ADD "%%I" /F /V "PnPCapabilities" /T REG_DWORD /D 0x18 >NUL 2>&1
+        
+        echo USB power management disabled for %%I
+    )
+)
+
+endlocal
+
 
 ::remove old tweak
 ::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v ThreadPriority /f >nul 2>&1
