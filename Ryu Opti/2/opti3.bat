@@ -265,7 +265,6 @@ for /L %%i in (0,1,9) do (
     reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Version" /t REG_SZ /d "1.0" /f
 )
 )
-gpupdate /force
 
 endlocal
 
@@ -401,6 +400,8 @@ REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters
 
 ::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 ::REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters\Wdf" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
+
+gpupdate /force
 
 goto next1
 
