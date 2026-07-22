@@ -1,4 +1,6 @@
 @echo off
+call :IsAdmin
+
 setlocal enabledelayedexpansion
 
 REM --- Définir les chemins ---
