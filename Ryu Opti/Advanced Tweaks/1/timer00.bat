@@ -99,21 +99,10 @@ echo IDA MAKHDAMLKCH BIEN DIR RESTOR
 echo Press any key to close.
 pause >nul
 
-start https://discord.gg/gQjfXSECrj
-start https://www.twitch.tv/ryu0833
-start https://www.tiktok.com/@ryu_val_
-start https://www.tiktok.com/@ryutech0
-
-start cmd /k "echo Adrob tala 3la TikTok w matnssach follow & pause & exit"
-
-exit
-
-:exit1
-cls
-
 start https://linktr.ee/Ryu0833
 
 start cmd /k "echo Adrob tala 3la TikTok w matnssach follow & pause & exit"
 
 exit
+
 
