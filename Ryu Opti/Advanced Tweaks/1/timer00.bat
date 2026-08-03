@@ -105,4 +105,13 @@ start cmd /k "echo Adrob tala 3la TikTok w matnssach follow & pause & exit"
 
 exit
 
+:exit1
+cls
+
+start https://linktr.ee/Ryu0833
+
+start cmd /k "echo Adrob tala 3la TikTok w matnssach follow & pause & exit"
+
+exit
+
 
