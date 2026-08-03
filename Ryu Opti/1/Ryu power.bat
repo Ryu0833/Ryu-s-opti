@@ -12,7 +12,8 @@ if "%choice%"=="1" goto power
 if "%choice%"=="2" goto exit
 
 :power
-:: Check if "Ryu powerplan" already exists
+powercfg -setactive SCHEME_MIN
+:: Check if "Ryu Powerplan" already exists and delete it
 set "GUID="
 
 for /f "tokens=*" %%L in ('powercfg -list') do (
@@ -22,13 +23,14 @@ for /f "tokens=*" %%L in ('powercfg -list') do (
             set "GUID=%%G"
             set "GUID=!GUID:(=!"
             set "GUID=!GUID:)=!"
+            
+            :: Delete the power plan using the extracted GUID
+            powercfg -delete !GUID!
+            echo Deleted Ryu Powerplan with GUID: !GUID!
         )
     )
 )
 
-if defined GUID (
-    powercfg -setactive !GUID!
-) else (
     echo [INFO] Creating new Ryu powerplan...
     for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
     set "GUID=!GUID:(=!"
@@ -36,7 +38,7 @@ if defined GUID (
     echo Detected GUID = !GUID!
     powercfg -changename !GUID! "Ryu Powerplan"
     powercfg -setactive !GUID!
-)
+
 goto power0
 
 :power0
