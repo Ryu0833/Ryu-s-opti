@@ -57,7 +57,7 @@ if errorlevel 1 (
 )
 REM --- Créer le raccourci ---
 REM echo [INFO] Création du raccourci dans le démarrage automatique...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5080 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5200 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
 goto exit0
 
 :restore
