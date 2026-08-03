@@ -24,7 +24,7 @@ if "%choice%"=="0" goto exit1
 :install
 cls
 echo  1 - 1ms(most stable recommended)
-echo  2 - 0.5070ms(best perfermance mchi stable w ta9der dirlk problems sama fkahtrk kidirha) 
+echo  2 - 0.5ms(best perfermance mchi stable w ta9der dirlk problems sama fkahtrk kidirha) 
 echo ================================
 set /p choice="Select number: "
 
@@ -57,7 +57,7 @@ if errorlevel 1 (
 )
 REM --- Créer le raccourci ---
 REM echo [INFO] Création du raccourci dans le démarrage automatique...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5070 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5080 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
 goto exit0
 
 :restore
