@@ -1,5 +1,6 @@
 @Echo Off
 call :IsAdmin
+setlocal EnableExtensions EnableDelayedExpansion
 
 echo rak baghi dir opti ta3i ?
 echo  1 - yes
@@ -185,7 +186,6 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" /v "C
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
 
-setlocal enabledelayedexpansion
 
 :: ================================
 :: Games
@@ -233,7 +233,7 @@ for /L %%i in (0,1,9) do (
 )
 )
 
-endlocal
+
 
 
 
@@ -268,7 +268,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "RssBaseCpu
 ::reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
 ::reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
 
-setlocal EnableExtensions EnableDelayedExpansion
+
 
 FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') DO (
     FOR /F "tokens=*" %%I IN ('reg query "%%D" 2^>NUL') DO (
@@ -284,7 +284,7 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
     )
 )
 
-endlocal
+
 
 setlocal
 
@@ -300,9 +300,9 @@ for /f "tokens=*" %%K in ('reg query "%KEY%"') do (
 
 )
 
-endlocal
 
-setlocal EnableExtensions EnableDelayedExpansion
+
+
 
 FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Class\{36fc9e60-c465-11cf-8056-444553540000}"') DO (
     FOR /F "tokens=*" %%I IN ('reg query "%%D" 2^>NUL') DO (
@@ -313,7 +313,7 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Clas
     )
 )
 
-endlocal
+
 
 
 ::remove old tweak
@@ -471,6 +471,23 @@ echo AMD...
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\amdfendr\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
 
+
+
+set "BASE=HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}"
+
+for /f "delims=" %%K in ('reg query "%BASE%" /s 2^>nul ^| findstr /i /r "\\UMD$"') do (
+    
+    reg add "%%K" /v ShaderCache /t REG_BINARY /d 3200 /f >nul
+
+    if !errorlevel! equ 0 (
+        echo ShaderCache successfully changed to 3200.
+    ) else (
+        echo ERROR: Failed to change ShaderCache.
+    )
+
+    echo.
+)
+
 goto exitmsg
 
 :intel
@@ -522,7 +539,7 @@ bcdedit /deletevalue tscsyncpolicy
 goto exitmsg
 
 :exitmsg
-
+endlocal
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
 echo Press any key to close.
