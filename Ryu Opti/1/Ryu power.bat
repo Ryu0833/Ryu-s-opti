@@ -38,7 +38,7 @@ for /f "tokens=*" %%L in ('powercfg -list') do (
     set "GUID=!GUID:(=!"
     set "GUID=!GUID:)=!"
     echo Detected GUID = !GUID!
-    powercfg -changename !GUID! "Ryu Powerplan"
+    powercfg -changename !GUID! "Ryu Powerplan" "Ryu custom performance power plan"
     powercfg -setactive !GUID!
 
 goto power0
