@@ -32,7 +32,8 @@ for /f "tokens=*" %%L in ('powercfg -list') do (
 )
 
     echo [INFO] Creating new Ryu powerplan...
-    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
+    ::for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
+    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_BALANCED') do set "GUID=%%i" 
     set "GUID=!GUID:(=!"
     set "GUID=!GUID:)=!"
     echo Detected GUID = !GUID!
