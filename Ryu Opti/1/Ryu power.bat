@@ -12,7 +12,8 @@ if "%choice%"=="1" goto power
 if "%choice%"=="2" goto exit
 
 :power
-powercfg -setactive SCHEME_MIN
+::powercfg -setactive SCHEME_MIN
+powercfg -setactive SCHEME_BALANCED
 :: Check if "Ryu Powerplan" already exists and delete it
 set "GUID="
 
