@@ -187,6 +187,30 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" /v "C
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
 
 
+
+logman stop "DiagLog" -ets
+logman stop "Diagtrack-Listener" -ets
+logman stop "SleepStudyTraceSession" -ets
+logman stop "ReadyBoot" -ets
+logman stop "Microsoft-Windows-Rdp-Graphics-RdpIdd-Trace" -ets
+logman stop "SpoolerLogger" -ets
+logman stop "CldFltLog" -ets
+logman stop "CimFSUnionFS-Filter" -ets
+::logman stop "WiFiSession" -ets
+::logman stop "RadioMgr" -ets
+
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DiagLog" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\AutoLogger-Diagtrack-Listener" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\SleepStudy" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\ReadyBoot" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\SpoolerLogger" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\Microsoft-Windows-Rdp-Graphics-RdpIdd-Trace" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\CldFltLog" /v "Start" /t REG_DWORD /d 0 /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\CimFSUnionFS-Filter" /v "Start" /t REG_DWORD /d 0 /f
+::reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\WiFiSession" /v "Start" /t REG_DWORD /d 0 /f
+::reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\RadioMgr" /v "Start" /t REG_DWORD /d 0 /f
+
+
 :: ================================
 :: Games
 :: ================================
