@@ -187,7 +187,6 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" /v "C
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
 
 
-
 logman stop "DiagLog" -ets
 logman stop "Diagtrack-Listener" -ets
 logman stop "SleepStudyTraceSession" -ets
@@ -302,13 +301,13 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendOn"           /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "DeviceSelectiveSuspended"     /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendEnabled"     /T REG_DWORD /D 0 >NUL 2>&1
-        REG ADD "%%I\Device Parameters" /F /V "IdleInWorkingState"           /T REG_DWORD /D 0 >NUL 2>&1
+        ::REG ADD "%%I\Device Parameters" /F /V "IdleInWorkingState"           /T REG_DWORD /D 0 >NUL 2>&1
 
         echo USB power management disabled for %%I
     )
 )
 
-set "ROOT=HKLM\SYSTEM\CurrentControlSet\Enum\PCI"
+set "ROOT=HKLM\SYSTEM\CurrentControlSet\Enum"
 
 
 for /f "delims=" %%K in ('reg query "%ROOT%" /s 2^>nul ^| findstr /b /i /c:"HKEY_LOCAL_MACHINE"') do (
@@ -481,7 +480,7 @@ cls
 echo  1 - AMD GPU'S
 echo  2 - Nvidia GPU'S
 ::echo  3 - Intel GPU'S
-echo  3 - Restor
+::echo  3 - Restor
 echo  0 - Exit
 
 echo.
@@ -491,7 +490,7 @@ set /p s=Choose an option:
 if "%s%"=="1" goto amd
 if "%s%"=="2" goto nvidia
 ::if "%s%"=="3" goto intel
-if "%s%"=="3" goto restor
+::if "%s%"=="3" goto restor
 if "%s%"=="0" goto exitmsg
 
 echo Invalid choice, exiting...
