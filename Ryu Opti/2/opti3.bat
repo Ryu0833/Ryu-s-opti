@@ -236,7 +236,6 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
 
 endlocal
 
-setlocal
 set "ROOT=HKLM\SYSTEM\CurrentControlSet\Enum"
 
 
