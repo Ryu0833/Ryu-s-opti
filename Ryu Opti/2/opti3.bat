@@ -237,28 +237,6 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
 endlocal
 
 setlocal
-set ROOT=HKLM\SYSTEM\CurrentControlSet\Enum
-
-
-for /f "delims=" %%K in ('reg query "%ROOT%" /s 2^>nul ^| findstr /b /i /c:"HKEY_LOCAL_MACHINE"') do (
-    reg query "%%K" /v IdleInWorkingState >nul 2>&1
-
-    if not errorlevel 1 (
-        echo Found: %%K
-        reg add "%%K" /v IdleInWorkingState /t REG_DWORD /d 0 /f >nul 2>&1
-
-        if errorlevel 1 (
-            echo   FAILED
-        ) else (
-            echo   CHANGED TO 1
-        )
-
-        echo.
-    )
-)
-endlocal
-
-setlocal
 
 set KEY=HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}
 
