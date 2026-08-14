@@ -196,6 +196,27 @@ for /L %%i in (0,1,9) do (
 
 endlocal
 
+setlocal
+set ROOT=HKLM\SYSTEM\CurrentControlSet\Enum
+
+
+for /f "delims=" %%K in ('reg query "%ROOT%" /s 2^>nul ^| findstr /b /i /c:"HKEY_LOCAL_MACHINE"') do (
+    reg query "%%K" /v IdleInWorkingState >nul 2>&1
+
+    if not errorlevel 1 (
+        echo Found: %%K
+        reg add "%%K" /v IdleInWorkingState /t REG_DWORD /d 0 /f >nul 2>&1
+
+        if errorlevel 1 (
+            echo   FAILED
+        ) else (
+            echo   CHANGED TO 1
+        )
+
+        echo.
+    )
+)
+endlocal
 
 
 
