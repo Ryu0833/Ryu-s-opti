@@ -33,71 +33,6 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule" /v "Disable
 
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Reliability" /v "TimeStampInterval " /t REG_DWORD /d "1" /f
 
-netsh interface tcp set global autotuninglevel=highlyrestricted
-netsh interface ipv4 set subinterface "Ethernet" mtu=1492 store=persistent
-netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
-
-netsh int ipv4 set dynamicport udp start=1025 num=64511
-netsh int ipv4 set dynamicport tcp start=1025 num=64511
-
-@powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=ctcp"
-@powershell -command "netsh int tcp set supplemental Template=Datacenter CongestionProvider=ctcp"
-@powershell -command "netsh int tcp set supplemental Template=Compat CongestionProvider=ctcp"
-@powershell -command "netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=ctcp"
-@powershell -command "netsh int tcp set supplemental Template=InternetCustom CongestionProvider=ctcp"
-
-netsh int tcp set supplemental Template=Internet CongestionProvider=ctcp
-netsh int tcp set supplemental Template=Datacenter CongestionProvider=ctcp
-netsh int tcp set supplemental Template=Compat CongestionProvider=ctcp
-netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=ctcp
-netsh int tcp set supplemental Template=InternetCustom CongestionProvider=ctcp
-
-netsh int tcp set global rsc=enabled 
-netsh int tcp set global rss=enabled 
-netsh int tcp set global dca=enabled 
-netsh int tcp set global timestamps=disabled 
-netsh int tcp set global initialRto=2000 
-netsh int tcp set global nonsackrttresiliency=disabled 
-netsh int tcp set global maxsynretransmissions=2
-::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Flow Control' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Interrupt Moderation' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Green Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Gigabit Lite' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Jumbo Frame' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Power Saving Mode' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Energy-Efficient Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }" 
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'EEE Max Support Speed' -DisplayValue '10 Mbps Full Duplex' -ErrorAction SilentlyContinue }" 
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on Magic Packet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on pattern match' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'WOL & Shutdown Link Speed' -DisplayValue 'Not Speed Down' -ErrorAction SilentlyContinue }"
-@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
-@powershell -command "Set-NetOffloadGlobalSetting -Chimney 'Disabled'"
-@powershell -command "Set-NetOffloadGlobalSetting -TaskOffload 'Enabled'"
-@powershell -command "Set-NetOffloadGlobalSetting -ReceiveSideScaling 'Enabled'"
-@powershell -command "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing 'Enabled'"
-@powershell -command "Set-NetOffloadGlobalSetting -PacketCoalescingFilter 'Enabled' "
-::@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
-@powershell -command "Enabled-NetAdapterRsc -Name * "
-::@powershell -command "Disable-NetAdapterLso -Name *"
-@powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -MinRto '300'" 
-@powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -InitialCongestionWindow '10'" 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v DefaultTTL /d 64 /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v MaxUserPort /d 65534 /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v TcpTimedWaitDelay /d 30 /f 
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\QoS" /t REG_SZ /v "Do not use NLA" /d 1 /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /t REG_DWORD /v LargeSystemCache /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "00000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "04000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "0200" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "1700" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "DnsPriority" /t REG_DWORD /d "6" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "HostsPriority" /t REG_DWORD /d "5" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "LocalPriority" /t REG_DWORD /d "4" /f 
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "NetbtPriority" /t REG_DWORD /d "7" /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v IRPStackSize /d 30 /f 
-
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f 
 
@@ -174,7 +109,7 @@ Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "TimeI
 Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "QuantumLength" /t REG_DWORD /d "20" /f
 
 
-Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "InterruptSteeringDisabled" /t REG_DWORD /d "1" /f
+::Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "InterruptSteeringDisabled" /t REG_DWORD /d "1" /f
 ::Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "ThreadDpcEnable" /t REG_DWORD /d "0" /f
 ::Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "SplitLargeCaches" /t REG_DWORD /d "1" /f
 ::REG DELETE "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v SplitLargeCaches /f >nul 2>&1
@@ -262,7 +197,7 @@ for /L %%i in (0,1,9) do (
 
 
 
-Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicWebHelper.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "2" /f
+::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicWebHelper.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "2" /f
 Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\discord.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "5" /f
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "4" /f
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
@@ -278,22 +213,6 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDa
 Reg add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "0" /f 
 Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold1" /t REG_SZ /d "0" /f 
 Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold2" /t REG_SZ /d "0" /f 
-
-for /f "tokens=*" %%i in ('@powershell -command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name"') do set NIC=%%i
-
-netsh interface ipv4 set dnsservers name="%NIC%" static 1.1.1.1 primary
-netsh interface ipv4 add dnsservers name="%NIC%" 1.0.0.1 index=2
-
-@powershell -command "Get-NetAdapterRss -Name '%NIC%' | Format-List"
-
-@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 2"
-
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
-::reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
-::reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
-
-
 
 FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') DO (
     FOR /F "tokens=*" %%I IN ('reg query "%%D" 2^>NUL') DO (
@@ -355,32 +274,144 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Clas
     )
 )
 
+cls
+echo rak baghi network optimization ?
+echo  1 - yes
+echo  2 - no
 
+echo ================================
+set /p choice="Select number: "
 
+if "%choice%"=="1" goto net
+if "%choice%"=="2" goto opti2
 
-::remove old tweak
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\USBXHCI\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AMDKMDAG\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\amdkmdap\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v ThreadPriority /f >nul 2>&1
-::REG DELETE "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v ThreadPriority /f >nul 2>&1
-::reg delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe" /f
-::reg delete "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe" /f
+:net
+netsh interface tcp set global autotuninglevel=highlyrestricted
+netsh interface ipv4 set subinterface "Ethernet" mtu=1492 store=persistent
+netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
+
+netsh int ipv4 set dynamicport udp start=1025 num=64511
+netsh int ipv4 set dynamicport tcp start=1025 num=64511
+
+echo congestion control algorithm
+echo  1 - CUBIC(default setting for windows 10 and 11)
+echo  2 - BBR2 (new algorithm work only in windows 11)
+
+echo ================================
+set /p choice="Select number: "
+
+if "%choice%"=="1" goto cubic
+if "%choice%"=="2" goto bbr
+
+:cubic
+@powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=CUBIC"
+@powershell -command "netsh int tcp set supplemental Template=Datacenter CongestionProvider=CUBIC"
+@powershell -command "netsh int tcp set supplemental Template=Compat CongestionProvider=CUBIC"
+@powershell -command "netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=CUBIC"
+@powershell -command "netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC"
+
+netsh int tcp set supplemental Template=Internet CongestionProvider=CUBIC
+netsh int tcp set supplemental Template=Datacenter CongestionProvider=CUBIC
+netsh int tcp set supplemental Template=Compat CongestionProvider=CUBIC
+netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=CUBIC
+netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC
+
+netsh int ipv4 set gl loopbacklargemtu=enable
+netsh int ipv6 set gl loopbacklargemtu=enable
+goto opti1
+
+:bbr
+@powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2"
+@powershell -command "netsh int tcp set supplemental Template=Datacenter CongestionProvider=bbr2"
+@powershell -command "netsh int tcp set supplemental Template=Compat CongestionProvider=bbr2"
+@powershell -command "netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=bbr2"
+@powershell -command "netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2"
+
+netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2
+netsh int tcp set supplemental Template=Datacenter CongestionProvider=bbr2
+netsh int tcp set supplemental Template=Compat CongestionProvider=bbr2
+netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=bbr2
+netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
+
+netsh int ipv4 set gl loopbacklargemtu=disable
+netsh int ipv4 set gl loopbacklargemtu=disable
+goto opti1
+
+:net
+netsh int tcp set global rsc=enabled 
+netsh int tcp set global rss=enabled 
+netsh int tcp set global dca=enabled 
+netsh int tcp set global timestamps=disabled 
+netsh int tcp set global initialRto=2000 
+netsh int tcp set global nonsackrttresiliency=disabled 
+netsh int tcp set global maxsynretransmissions=2
+::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Flow Control' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Interrupt Moderation' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Green Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Gigabit Lite' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Jumbo Frame' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Power Saving Mode' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Energy-Efficient Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }" 
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'EEE Max Support Speed' -DisplayValue '10 Mbps Full Duplex' -ErrorAction SilentlyContinue }" 
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on Magic Packet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on pattern match' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'WOL & Shutdown Link Speed' -DisplayValue 'Not Speed Down' -ErrorAction SilentlyContinue }"
+@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
+@powershell -command "Set-NetOffloadGlobalSetting -Chimney 'Disabled'"
+@powershell -command "Set-NetOffloadGlobalSetting -TaskOffload 'Enabled'"
+@powershell -command "Set-NetOffloadGlobalSetting -ReceiveSideScaling 'Enabled'"
+@powershell -command "Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing 'Enabled'"
+@powershell -command "Set-NetOffloadGlobalSetting -PacketCoalescingFilter 'Enabled' "
+::@powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
+@powershell -command "Enabled-NetAdapterRsc -Name * "
+::@powershell -command "Disable-NetAdapterLso -Name *"
+@powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -MinRto '300'" 
+@powershell -command "Set-NetTCPSetting -SettingName 'InternetCustom' -InitialCongestionWindow '10'" 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v DefaultTTL /d 64 /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v MaxUserPort /d 65534 /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v TcpTimedWaitDelay /d 30 /f 
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
+reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\QoS" /t REG_SZ /v "Do not use NLA" /d 1 /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /t REG_DWORD /v LargeSystemCache /d 0 /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "00000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "04000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "0200" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "1700" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "DnsPriority" /t REG_DWORD /d "6" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "HostsPriority" /t REG_DWORD /d "5" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "LocalPriority" /t REG_DWORD /d "4" /f 
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\ServiceProvider" /v "NetbtPriority" /t REG_DWORD /d "7" /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v IRPStackSize /d 30 /f 
+
+for /f "tokens=*" %%i in ('@powershell -command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name"') do set NIC=%%i
+
+netsh interface ipv4 set dnsservers name="%NIC%" static 1.1.1.1 primary
+netsh interface ipv4 add dnsservers name="%NIC%" 1.0.0.1 index=2
+
+@powershell -command "Get-NetAdapterRss -Name '%NIC%' | Format-List"
+
+@powershell -command "Set-NetAdapterRss -Name '%NIC%' -NumberOfReceiveQueues 2"
+
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "RssBaseCpu" /t REG_DWORD /d "2" /f
+::reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
+::reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "MaxRssProcessors" /t REG_DWORD /d "2" /f
+
+ipconfig/release
+ipconfig/Renew
+ipconfig/flushdns
+
+goto opti2
+
+:opti2
 
 ::DISM.exe /Online /Cleanup-image /Restorehealth
 ::sfc /scannow
 
 ::goto exitmsg
 
-ipconfig/release
-ipconfig/Renew
-ipconfig/flushdns
+
 
 :: Audio Priority Boost
 REG ADD "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\HDAudBus\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
