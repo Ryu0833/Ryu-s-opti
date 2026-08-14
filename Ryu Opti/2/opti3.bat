@@ -282,10 +282,10 @@ echo  2 - no
 echo ================================
 set /p choice="Select number: "
 
-if "%choice%"=="1" goto net
+if "%choice%"=="1" goto nett
 if "%choice%"=="2" goto opti2
 
-:net
+:nett
 netsh interface tcp set global autotuninglevel=highlyrestricted
 netsh interface ipv4 set subinterface "Ethernet" mtu=1492 store=persistent
 netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
@@ -318,7 +318,7 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC
 
 netsh int ipv4 set gl loopbacklargemtu=enable
 netsh int ipv6 set gl loopbacklargemtu=enable
-goto net1
+goto nett1
 
 :bbr
 @powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2"
@@ -335,9 +335,9 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
 
 netsh int ipv4 set gl loopbacklargemtu=disable
 netsh int ipv4 set gl loopbacklargemtu=disable
-goto net1
+goto nett1
 
-:net1
+:nett1
 netsh int tcp set global rsc=enabled 
 netsh int tcp set global rss=enabled 
 netsh int tcp set global dca=enabled 
