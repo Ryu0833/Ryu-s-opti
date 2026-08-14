@@ -318,7 +318,7 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC
 
 netsh int ipv4 set gl loopbacklargemtu=enable
 netsh int ipv6 set gl loopbacklargemtu=enable
-goto opti1
+goto net1
 
 :bbr
 @powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2"
@@ -335,9 +335,9 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
 
 netsh int ipv4 set gl loopbacklargemtu=disable
 netsh int ipv4 set gl loopbacklargemtu=disable
-goto opti1
+goto net1
 
-:net
+:net1
 netsh int tcp set global rsc=enabled 
 netsh int tcp set global rss=enabled 
 netsh int tcp set global dca=enabled 
