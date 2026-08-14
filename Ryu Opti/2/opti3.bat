@@ -228,12 +228,34 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendOn"           /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "DeviceSelectiveSuspended"     /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendEnabled"     /T REG_DWORD /D 0 >NUL 2>&1
-        REG ADD "%%I\Device Parameters" /F /V "IdleInWorkingState"           /T REG_DWORD /D 0 >NUL 2>&1
+        ::REG ADD "%%I\Device Parameters" /F /V "IdleInWorkingState"           /T REG_DWORD /D 0 >NUL 2>&1
 
         echo USB power management disabled for %%I
     )
 )
 
+endlocal
+
+setlocal
+set "ROOT=HKLM\SYSTEM\CurrentControlSet\Enum"
+
+
+for /f "delims=" %%K in ('reg query "%ROOT%" /s 2^>nul ^| findstr /b /i /c:"HKEY_LOCAL_MACHINE"') do (
+    reg query "%%K" /v IdleInWorkingState >nul 2>&1
+
+    if not errorlevel 1 (
+        echo Found: %%K
+        reg add "%%K" /v IdleInWorkingState /t REG_DWORD /d 0 /f >nul 2>&1
+
+        if errorlevel 1 (
+            echo   FAILED
+        ) else (
+            echo   CHANGED TO 1
+        )
+
+        echo.
+    )
+)
 endlocal
 
 setlocal
