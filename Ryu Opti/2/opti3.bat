@@ -200,7 +200,6 @@ endlocal
 
 
 
-
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicWebHelper.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "2" /f
 Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\discord.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "5" /f
 ::Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "4" /f
@@ -228,7 +227,7 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Enum\USB"') 
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendOn"           /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "DeviceSelectiveSuspended"     /T REG_DWORD /D 0 >NUL 2>&1
         REG ADD "%%I\Device Parameters" /F /V "SelectiveSuspendEnabled"     /T REG_DWORD /D 0 >NUL 2>&1
-        
+        REG ADD "%%I\Device Parameters" /F /V "IdleInWorkingState"           /T REG_DWORD /D 0 >NUL 2>&1
 
         echo USB power management disabled for %%I
     )
