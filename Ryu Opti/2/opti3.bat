@@ -84,8 +84,8 @@ Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProf
 Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Window Manager" /v "Priority" /t REG_DWORD /d "5" /f
 
 Reg add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayMinFPS" /t REG_DWORD /d "0" /f
-Reg add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestMode" /t REG_DWORD /d "5" /f
-Reg add "HKCU\System\GameConfigStore" /v "GameDVR_FSEBehaviorMode" /t REG_DWORD /d "2" /f
+::Reg add "HKLM\SOFTWARE\Microsoft\Windows\Dwm" /v "OverlayTestMode" /t REG_DWORD /d "5" /f
+::Reg add "HKCU\System\GameConfigStore" /v "GameDVR_FSEBehaviorMode" /t REG_DWORD /d "2" /f
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "NtfsDisableLastAccessUpdate" /t REG_DWORD /d "0" /f
 ::Reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard" /v "EnableVirtualizationBasedSecurity" /t REG_DWORD /d "0" /f
@@ -333,20 +333,21 @@ netsh int ipv6 set gl loopbacklargemtu=enable
 goto nett1
 
 :bbr
-@powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2"
-@powershell -command "netsh int tcp set supplemental Template=Datacenter CongestionProvider=bbr2"
-@powershell -command "netsh int tcp set supplemental Template=Compat CongestionProvider=bbr2"
-@powershell -command "netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=bbr2"
-@powershell -command "netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2"
+:: Try applying BBR2 using PowerShell error handling
+@powershell -command "try { netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2 -ErrorAction Stop } catch { exit 1 }"
+if %errorlevel% neq 0 (
+    echo BBR2 is not supported or failed to apply. Falling back to CUBIC...
+    goto cubic
+)
 
-netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2
+:: If successful, apply remaining BBR2 configurations
 netsh int tcp set supplemental Template=Datacenter CongestionProvider=bbr2
 netsh int tcp set supplemental Template=Compat CongestionProvider=bbr2
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=bbr2
 netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
 
 netsh int ipv4 set gl loopbacklargemtu=disable
-netsh int ipv4 set gl loopbacklargemtu=disable
+netsh int ipv6 set gl loopbacklargemtu=disable
 goto nett1
 
 :nett1
