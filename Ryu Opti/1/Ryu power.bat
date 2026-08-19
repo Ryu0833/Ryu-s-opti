@@ -1,5 +1,5 @@
 @echo off
-::call :IsAdmin
+
 setlocal ENABLEDELAYEDEXPANSION
 echo rak baghi dir power plan ta3i ?
 echo  1 - yes
