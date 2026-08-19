@@ -95,18 +95,14 @@ goto exit1
 :exit0
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
-echo Adrob tala 3la TikTok w matnssach follow & pause & exit
-echo Press any key to close.
-pause >nul
-
+echo Adrob tala 3la TikTok w matnssach follow
 start https://linktr.ee/Ryu0833
 
 exit
 
 :exit1
 cls
-
-echo Adrob tala 3la TikTok w matnssach follow & pause & exit
+echo Adrob tala 3la TikTok w matnssach follow
 start https://linktr.ee/Ryu0833
 
 

@@ -9,7 +9,7 @@ echo ================================
 set /p choice="Select number: "
 
 if "%choice%"=="1" goto opti
-if "%choice%"=="2" goto exitmsg
+if "%choice%"=="2" goto exitmsg1
 
 :opti
 
@@ -626,10 +626,20 @@ goto exitmsg
 endlocal
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
-echo Adrob tala 3la TikTok w matnssach follow & pause & exit
+echo Adrob tala 3la TikTok w matnssach follow
 echo Press any key to close.
+start https://linktr.ee/Ryu0833
 pause >nul
 
+exit
+
+
+:exitmsg1
+endlocal
+cls
+echo Adrob tala 3la TikTok w matnssach follow
+echo Press any key to close.
 start https://linktr.ee/Ryu0833
+pause
 
 exit

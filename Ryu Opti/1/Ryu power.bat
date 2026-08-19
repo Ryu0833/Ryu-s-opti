@@ -65,10 +65,7 @@ goto exit
 :exit
 cls
 echo IDA MAKHDAMLKCH BIEN dir ta3k l9dim powerplan
-echo Adrob tala 3la TikTok w matnssach follow & pause & exit
-
-pause >nul
-
+echo Adrob tala 3la TikTok w matnssach follow 
 start https://linktr.ee/Ryu0833
 
 pause
