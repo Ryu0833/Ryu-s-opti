@@ -1,5 +1,5 @@
 @Echo Off
-call :IsAdmin
+::call :IsAdmin
 setlocal EnableExtensions EnableDelayedExpansion
 
 echo rak baghi dir opti ta3i ?

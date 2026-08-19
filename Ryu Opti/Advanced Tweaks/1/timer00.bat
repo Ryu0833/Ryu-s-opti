@@ -1,5 +1,5 @@
 @echo off
-call :IsAdmin
+::call :IsAdmin
 
 setlocal enabledelayedexpansion
 
