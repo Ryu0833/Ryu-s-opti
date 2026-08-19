@@ -18,10 +18,10 @@ $scripts = @(
         FileName = "Ryu power.bat" 
     },
     @{ 
-        Name     = "Opti 3"
+        Name     = "Opti"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/2"
-        FileName = "opti3.bat" 
+        FileName = "opti.bat" 
     },
     @{ 
         Name     = "Timer Resolution Script"
