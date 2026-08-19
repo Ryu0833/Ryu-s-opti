@@ -1,5 +1,4 @@
 @Echo Off
-::call :IsAdmin
 setlocal EnableExtensions EnableDelayedExpansion
 
 echo rak baghi dir opti ta3i ?
@@ -628,11 +627,10 @@ goto exitmsg
 endlocal
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
+echo Adrob tala 3la TikTok w matnssach follow & pause & exit
 echo Press any key to close.
 pause >nul
 
 start https://linktr.ee/Ryu0833
-
-start cmd /k "echo Adrob tala 3la TikTok w matnssach follow & pause & exit"
 
 exit
