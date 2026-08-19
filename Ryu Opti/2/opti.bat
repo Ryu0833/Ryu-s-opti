@@ -305,8 +305,8 @@ netsh int ipv4 set dynamicport udp start=1025 num=64511
 netsh int ipv4 set dynamicport tcp start=1025 num=64511
 
 echo congestion control algorithm
-echo  1 - CUBIC(default setting for windows 10 and 11)
-echo  2 - BBR2 (new algorithm work only in windows 11)
+echo  1 - CUBIC (default setting for windows 10 and 11)
+echo  2 - BBR2 (new algorithm works only in windows 11)
 
 echo ================================
 set /p choice="Select number: "
@@ -315,12 +315,7 @@ if "%choice%"=="1" goto cubic
 if "%choice%"=="2" goto bbr
 
 :cubic
-@powershell -command "netsh int tcp set supplemental Template=Internet CongestionProvider=CUBIC"
-@powershell -command "netsh int tcp set supplemental Template=Datacenter CongestionProvider=CUBIC"
-@powershell -command "netsh int tcp set supplemental Template=Compat CongestionProvider=CUBIC"
-@powershell -command "netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=CUBIC"
-@powershell -command "netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC"
-
+echo Applying CUBIC...
 netsh int tcp set supplemental Template=Internet CongestionProvider=CUBIC
 netsh int tcp set supplemental Template=Datacenter CongestionProvider=CUBIC
 netsh int tcp set supplemental Template=Compat CongestionProvider=CUBIC
@@ -329,17 +324,20 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC
 
 netsh int ipv4 set gl loopbacklargemtu=enable
 netsh int ipv6 set gl loopbacklargemtu=enable
+pause
 goto nett1
 
 :bbr
-:: Try applying BBR2 using PowerShell error handling
-@powershell -command "try { netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2 -ErrorAction Stop } catch { exit 1 }"
+:: Try applying BBR2 directly using Batch
+netsh int tcp set supplemental Template=Internet CongestionProvider=bbr2 >nul 2>&1
 if %errorlevel% neq 0 (
-    echo BBR2 is not supported or failed to apply. Falling back to CUBIC...
+    echo BBR2 is not supported, failed to apply, or you forgot to run as Administrator.
+    echo Falling back to CUBIC...
     goto cubic
 )
 
 :: If successful, apply remaining BBR2 configurations
+echo BBR2 supported! Applying configurations...
 netsh int tcp set supplemental Template=Datacenter CongestionProvider=bbr2
 netsh int tcp set supplemental Template=Compat CongestionProvider=bbr2
 netsh int tcp set supplemental Template=DatacenterCustom CongestionProvider=bbr2
@@ -347,6 +345,7 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
 
 netsh int ipv4 set gl loopbacklargemtu=disable
 netsh int ipv6 set gl loopbacklargemtu=disable
+pause
 goto nett1
 
 :nett1
