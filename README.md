@@ -6,7 +6,7 @@
 
 ## Quick Start
 
-> \\\*\\\*The launcher must be run as Administrator because it performs system-wide performance and registry changes.
+The launcher must be run as Administrator because it performs system-wide performance and registry changes.
 
 
 
