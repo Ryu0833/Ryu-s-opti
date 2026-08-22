@@ -303,6 +303,7 @@ netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
 
 netsh int ipv4 set dynamicport udp start=1025 num=64511
 netsh int ipv4 set dynamicport tcp start=1025 num=64511
+goto bbr
 
 echo congestion control algorithm
 echo  1 - CUBIC (default setting for windows 10 and 11)
@@ -324,7 +325,7 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=CUBIC
 
 netsh int ipv4 set gl loopbacklargemtu=enable
 netsh int ipv6 set gl loopbacklargemtu=enable
-pause
+::pause
 goto nett1
 
 :bbr
@@ -345,7 +346,7 @@ netsh int tcp set supplemental Template=InternetCustom CongestionProvider=bbr2
 
 netsh int ipv4 set gl loopbacklargemtu=disable
 netsh int ipv6 set gl loopbacklargemtu=disable
-pause
+::pause
 goto nett1
 
 :nett1
