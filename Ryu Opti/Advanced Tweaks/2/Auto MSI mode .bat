@@ -213,6 +213,7 @@ function Get-MsiEnableColor ([PSCustomObject]$Device) {
 
 # Helper Function: Synchronize PCIe Tree Ports Priority to Match Device Priority
 function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string]$PriorityName, [string]$Indent = "   ") {
+    # Skip setting PCIe tree priority if the device class is Audio
     if ($Device.Class -eq 'Audio') { return }
 
     if ($Device.TreePorts -and $Device.TreePorts.Count -gt 0) {
