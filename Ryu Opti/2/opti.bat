@@ -299,9 +299,28 @@ if "%choice%"=="1" goto nett
 if "%choice%"=="2" goto opti2
 
 :nett
-netsh interface tcp set global autotuninglevel=highlyrestricted
-netsh interface ipv4 set subinterface "Ethernet" mtu=1492 store=persistent
-netsh interface ipv4 set subinterface "WiFi" mtu=1300 store=persistent
+netsh interface tcp set global autotuninglevel=restricted
+for /f "skip=3 tokens=1-4,*" %%a in ('netsh interface ipv4 show subinterfaces') do (
+    set "iface=%%e"
+    
+    :: Check if the interface name contains "Ethernet"
+    echo !iface! | findstr /i "Ethernet" >nul
+    if !errorlevel! equ 0 (
+        echo Found Ethernet connection: "!iface!"
+        echo Applying MTU 1492...
+        netsh interface ipv4 set subinterface "!iface!" mtu=1492 store=persistent
+        echo.
+    )
+    
+    :: Check if the interface name contains "Wi-Fi" or "WiFi"
+    echo !iface! | findstr /i "Wi-Fi WiFi" >nul
+    if !errorlevel! equ 0 (
+        echo Found Wi-Fi connection: "!iface!"
+        echo Applying MTU 1300...
+        netsh interface ipv4 set subinterface "!iface!" mtu=1300 store=persistent
+        echo.
+    )
+)
 
 netsh int ipv4 set dynamicport udp start=1025 num=64511
 netsh int ipv4 set dynamicport tcp start=1025 num=64511
