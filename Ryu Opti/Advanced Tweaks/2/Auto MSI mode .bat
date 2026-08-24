@@ -213,6 +213,8 @@ function Get-MsiEnableColor ([PSCustomObject]$Device) {
 
 # Helper Function: Synchronize PCIe Tree Ports Priority to Match Device Priority
 function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string]$PriorityName, [string]$Indent = "   ") {
+    if ($Device.Class -eq 'Audio') { return }
+
     if ($Device.TreePorts -and $Device.TreePorts.Count -gt 0) {
         foreach ($port in $Device.TreePorts) {
             if ($PriorityValue -eq 0) {
@@ -642,7 +644,7 @@ Write-Host " Loading..." -ForegroundColor Gray
                 Write-Host "   -> Core Affinity & Priority Restored to Default" -ForegroundColor Gray
             }
 
-            if ($dev.TreePorts -and $dev.TreePorts.Count -gt 0) {
+            if ($dev.Class -ne 'Audio' -and $dev.TreePorts -and $dev.TreePorts.Count -gt 0) {
                 foreach ($port in $dev.TreePorts) {
                     if (Test-Path $port.RegPrioPath) {
                         Remove-ItemProperty -Path $port.RegPrioPath -Name "DevicePriority" -ErrorAction SilentlyContinue
