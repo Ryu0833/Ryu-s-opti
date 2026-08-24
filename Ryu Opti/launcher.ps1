@@ -54,12 +54,12 @@ while ($true) {
     for ($i = 0; $i -lt $scripts.Count; $i++) {
         Write-Host "$($i + 1). $($scripts[$i].Name)"
     }
-    Write-Host "5. Exit" -ForegroundColor Yellow
+    Write-Host "0. Exit" -ForegroundColor Yellow
     Write-Host "--------------------------------" -ForegroundColor Cyan
     
-    $choice = Read-Host "Select a script to run (1-6)"
+    $choice = Read-Host "Select a number script to run "
     
-    if ($choice -eq '6') {
+    if ($choice -eq '0') {
         Write-Host "Exiting launcher." -ForegroundColor Green
         break
     }
