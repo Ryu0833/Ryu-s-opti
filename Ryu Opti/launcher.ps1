@@ -24,6 +24,12 @@ $scripts = @(
         FileName = "opti.bat" 
     },
     @{ 
+        Name     = "Shader Cache Cleanup"
+        Type     = "RepoScript"
+        Folder   = "Ryu Opti/3"
+        FileName = "clearshader.bat" 
+    },
+    @{ 
         Name     = "Timer Resolution Script"
         Type     = "RepoWithExe"
         Folder   = "Ryu Opti/Advanced Tweaks/1"
@@ -51,9 +57,9 @@ while ($true) {
     Write-Host "5. Exit" -ForegroundColor Yellow
     Write-Host "--------------------------------" -ForegroundColor Cyan
     
-    $choice = Read-Host "Select a script to run (1-5)"
+    $choice = Read-Host "Select a script to run (1-6)"
     
-    if ($choice -eq '5') {
+    if ($choice -eq '6') {
         Write-Host "Exiting launcher." -ForegroundColor Green
         break
     }
