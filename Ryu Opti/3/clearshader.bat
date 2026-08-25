@@ -18,7 +18,7 @@ echo    or occasional instability issues then you can also
 echo    run this Shader Cache cleaner to see if it solves
 echo    your problems. You should clean Shader Caches
 echo    before or right after each GPU driver update.
-echo
+echo.
 echo Run the Cleanup ?
 echo  1 - yes
 echo  2 - no 
