@@ -197,17 +197,14 @@ function Get-AssignedCoreFromBytes ($bytes) {
 #   - Hardware does NOT support MSI                     -> Red (not recommended)
 function Get-MsiEnableColor ([PSCustomObject]$Device) {
     if ($Device.IrqConflict -and $Device.HwMsiSupport) { return 'Green' }
-
     if ($Device.InfMsiValue -eq 1) { return 'Green' }
 
     if ($null -eq $Device.InfMsiValue) {
         if ($Device.HwMsiSupport) { return 'Green' } else { return 'Red' }
     }
-
     if ($Device.InfMsiValue -eq 0) {
         if ($Device.HwMsiSupport) { return 'DarkYellow' } else { return 'Red' }
     }
-
     return 'White'
 }
 
@@ -232,12 +229,13 @@ function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string
     }
 }
 
-function Get-PciDevices {
-    $devices = [System.Collections.Generic.List[object]]::new()
-
-    # 1. Get All PnP Entities to verify conflict exclusions FIRST (CIM is faster than legacy WMI)
+# ====================================================================
+# PHASE 1: HARDWARE AND IRQ MAPPING (RUNS ONCE AT STARTUP)
+# ====================================================================
+function Get-HardwareMap {
     $colAllDevices = Get-CimInstance -ClassName Win32_PnPEntity -ErrorAction SilentlyContinue
     if (-not $colAllDevices) { $colAllDevices = Get-CimInstance -ClassName Win32_PnPEntity -ErrorAction SilentlyContinue -ComputerName $env:COMPUTERNAME }
+    
     $devDictAll = @{}
     foreach ($d in $colAllDevices) { $devDictAll[$d.PNPDeviceID] = $d }
 
@@ -329,6 +327,31 @@ function Get-PciDevices {
 
     # 3c. Cache parsed INF MSI defaults so a driver shared by many devices (very common
     #     for USB hubs, storage controllers, etc.) is only parsed from disk once.
+    return [PSCustomObject]@{
+        AllDevicesDict = $devDictAll
+        ParentMap      = $parentMap
+        IrqMap         = $IrqMap
+        InterruptMap   = $interruptMap
+        PciDevices     = $colDevices
+    }
+}
+
+# ====================================================================
+# PHASE 2: DEVICE PROCESSING (RUNS RAPIDLY INSIDE THE LOOP)
+# ====================================================================
+function Get-PciDevices {
+    param(
+        [Parameter(Mandatory=$true)]
+        [object]$HardwareMap
+    )
+
+    $devices = [System.Collections.Generic.List[object]]::new()
+    $colDevices = $HardwareMap.PciDevices
+    $devDictAll = $HardwareMap.AllDevicesDict
+    $parentMap = $HardwareMap.ParentMap
+    $IrqMap = $HardwareMap.IrqMap
+    $interruptMap = $HardwareMap.InterruptMap
+
     $infCache = @{}
 
     foreach ($dev in $colDevices) {
@@ -529,8 +552,11 @@ function Get-PciDevices {
     return $devices
 }
 
-$cpu = Get-CpuProfile
+# ====================================================================
+# MAIN SCRIPT EXECUTION
+# ====================================================================
 
+$cpu = Get-CpuProfile
 Clear-Host
 $smtStr = if ($cpu.HasSMT) { "ENABLED" } else { "DISABLED" }
 $archStr = if ($cpu.IsHybrid) { "HYBRID ($($cpu.PCores.Count) P-Cores / $($cpu.ECores.Count) E-Cores)" } else { "STANDARD ($($cpu.PCores.Count) Physical Cores)" }
@@ -542,12 +568,21 @@ Write-Host "====================================================================
 Write-Host " CPU Architecture : $archStr" -ForegroundColor Gray
 Write-Host " SMT / HyperThread: $smtStr" -ForegroundColor Gray
 Write-Host ""
+Write-Host ""
 pause
+
+Clear-Host
+Write-Host " Loading Hardware and IRQ Maps ..." 
+Write-Host ""
+# Query CIM/WMI only once at startup
+$GlobalHardwareMap = Get-HardwareMap
 
 do {
     Clear-Host
-Write-Host " Loading..." -ForegroundColor Gray
-    $devList = Get-PciDevices
+    Write-Host " Refreshing Current Device States..." -ForegroundColor Gray
+    
+    # Process devices rapidly using cached hardware maps
+    $devList = Get-PciDevices -HardwareMap $GlobalHardwareMap
 
     if ($devList.Count -eq 0) {
         Write-Host "No matching PCI devices found." -ForegroundColor Red
