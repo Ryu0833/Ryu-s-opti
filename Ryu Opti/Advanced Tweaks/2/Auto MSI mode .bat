@@ -500,19 +500,19 @@ function Get-PciDevices {
 
                 $includeInTree = $false
                 if ($normalizedClass -eq 'USB') {
-                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)") {
+                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)" -and $pName -notmatch "(?i)(Root Complex)") {
                         $includeInTree = $true
                     }
                 } elseif ($normalizedClass -eq 'Display') {
-                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)") {
+                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)"-and $pName -notmatch "(?i)(Root Complex)") {
                         $includeInTree = $true
                     }
                 } elseif ($normalizedClass -in @('Audio', 'Net')) {
-                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|Root Complex)" -and $pName -notmatch "(?i)PCI.*Express.*Root|Root Port") {
+                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port)" -and $pName -notmatch "(?i)(PCI.*Express.*Root|Root Port|Root Complex)") {
                         $includeInTree = $true
                     }
                 } else {
-                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express)" -and $pName -notmatch "(?i)Root") {
+                    if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express)" -and $pName -notmatch "(?i)(Root |Root Complex)") {
                         $includeInTree = $true
                     }
                 }
@@ -638,11 +638,12 @@ do {
     Write-Host "----------------------------------------------------------------------------------------------------------------------------------------------------------"
     Write-Host " [A]   AUTO-OPTIMIZE ALL : Dedicated Display Core + Shared Non-Display P-Cores (Always Excludes Core 0)" -ForegroundColor Green
     Write-Host " [B]   MANUAL SETUP ALL  : Guided step-by-step setup for every device" -ForegroundColor Yellow
+    Write-Host " [C]   RE-CHECK DEVICES  : Re-check every device States" -ForegroundColor Cyan
     Write-Host " [R]   RESET ALL DEVICES : Revert devices to INF default MSI state, clear priority/core affinity" -ForegroundColor Red
     Write-Host " [1-N] SELECT DEVICE ID  : Edit a single specific device directly" -ForegroundColor White
     Write-Host " [Q]   QUIT SCRIPT" -ForegroundColor Gray
     Write-Host "----------------------------------------------------------------------------------------------------------------------------------------------------------"
-    $selection = Read-Host "Choice (A, B, R, Device ID #, or Q)"
+    $selection = Read-Host "Choice (A, B, C, R, Device ID #, or Q)"
     
     if ($selection -eq 'Q' -or $selection -eq 'q') {
         Start-Process "https://linktr.ee/Ryu0833"
@@ -697,6 +698,24 @@ do {
         Write-Host "==================================================================================" -ForegroundColor Cyan
         Write-Host "[SUCCESS] All devices and PCIe trees reset to hardware defaults!" -ForegroundColor Green
         Write-Host "RESTART REQUIRED: Reboot Windows or disable/enable devices in Device Manager." -ForegroundColor Yellow
+        Write-Host "==================================================================================" -ForegroundColor Cyan
+        pause
+        continue
+    }
+
+# OPTION C: RE-CHECK DEVICES
+    if ($selection -eq 'C' -or $selection -eq 'c') {
+        Clear-Host
+        Write-Host "==================================================================================" -ForegroundColor Cyan
+        Write-Host "                     RE-CHECK DEVICES ALL DEVICES                                 " -ForegroundColor Cyan
+        Write-Host "==================================================================================" -ForegroundColor Cyan
+
+         $GlobalHardwareMap = Get-HardwareMap
+            Write-Host ""
+            Write-Host ""  
+
+        Write-Host "==================================================================================" -ForegroundColor Cyan
+        Write-Host "[SUCCESS] All devices and PCIe trees Checked" -ForegroundColor Green
         Write-Host "==================================================================================" -ForegroundColor Cyan
         pause
         continue
@@ -781,8 +800,8 @@ do {
 
         $sortedOtherDevs = $otherDevs | Sort-Object {
             if ($_.Class -eq 'USB') { 1 }
-            elseif ($_.Class -eq 'Audio') { 2 }
-            elseif ($_.Class -eq 'Net') { 3 }
+            elseif ($_.Class -eq 'Net') { 2 }
+            elseif ($_.Class -eq 'Audio') { 3 }
             else { 4 }
         }
 

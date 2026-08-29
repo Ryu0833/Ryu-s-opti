@@ -1,4 +1,4 @@
-@Echo Off
+@echo Off
 setlocal EnableExtensions EnableDelayedExpansion
 
 echo rak baghi dir opti ta3i ?
@@ -8,13 +8,14 @@ echo  2 - no
 echo ================================
 set /p choice="Select number: "
 
-if "%choice%"=="1" goto opti
+if "%choice%"=="1" goto opti0
 if "%choice%"=="2" goto exitmsg1
 
-:opti
-
+:opti0
+cls
 @powerShell -command "Disable-MMAgent -mc"
 
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v EnableTransparency /t REG_DWORD /d 0 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "TurnOffWindowsAnimations" /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarAnimations" /t REG_DWORD /d 0 /f
 
@@ -50,6 +51,8 @@ bcdedit /deletevalue disabledynamictick
 bcdedit /deletevalue useplatformclock
 bcdedit /deletevalue useplatformtick
 bcdedit /deletevalue tscsyncpolicy
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$targets = 'WindowsSubsystemForLinux','CrossDevice','ParentalControls','SecureAssessmentBrowser','RawImageExtension','XboxGamingOverlay'; foreach ($t in $targets) { Get-AppxPackage -Name \"*$t*\" -AllUsers | ForEach-Object { if ($_.NonRemovable -or $_.IsInbox) { Write-Host \"[SKIPPED - PROTECTED SYSTEM APP] $($_.Name)\" } else { Write-Host \"[REMOVING] $($_.Name)...\" ; Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction SilentlyContinue } }; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like \"*$t*\" | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue } }; Set-Service -Name WpcMonSvc -StartupType Disabled -ErrorAction SilentlyContinue; Stop-Service -Name WpcMonSvc -Force -ErrorAction SilentlyContinue; Write-Host '[SERVICE] Disabled Parental Controls service (WpcMonSvc).'"
 
 @powershell -command "Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control' -Name 'SvcHostSplitThresholdInKB' -Value ((Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1KB) -Type DWord -Force"
 
@@ -92,17 +95,84 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v "NtfsDisableLastAc
 ::Reg add "HKLM\SYSTEM\CurrentControlSet\Control\DeviceGuard" /v "EnableVirtualizationBasedSecurity" /t REG_DWORD /d "0" /f
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "DisablePagingExecutive" /t REG_DWORD /d "1" /f
 
-::8gb8gb
-::reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "C:\pagefile.sys 8192 8192" /f
-
 ::pagefile=RAM
 ::@powershell -command "$ramMB = [math]::Floor((Get-CimInstance Win32_PhysicalMemory | Measure-Object Capacity -Sum).Sum / 1MB); Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management' -Name 'PagingFiles' -Value @(\"c:\pagefile.sys $ramMB $ramMB\") -Type MultiString -Force"
 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "?:\pagefile.sys" /f
-
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ExistingPageFile" /t REG_SZ /d "C:\pagefile.sys" /f
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\pci\Parameters" /v "ASPMOptOut" /t REG_DWORD /d "0" /f
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\Processor" /v "AllowPepPerfStates" /t REG_DWORD /d "0" /f
+
+cls
+echo compititf player ?
+echo  1 - yes
+echo  2 - no 
+
+echo ================================
+set /p choice="Select number: "
+
+if "%choice%"=="1" goto :opti01
+if "%choice%"=="2" goto opti1
+
+:opti01
+
+::8gb8gb
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "C:\pagefile.sys 8192 8192" /f
+
+:: 1. Set Visual Effects radio button to "Custom"
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 3 /f
+
+:: SETTINGS
+:: Show thumbnails instead of icons
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v IconsOnly /t REG_DWORD /d 0 /f
+
+:: Show window contents while dragging
+reg add "HKCU\Control Panel\Desktop" /v DragFullWindows /t REG_SZ /d 1 /f
+
+:: Smooth edges of screen fonts
+reg add "HKCU\Control Panel\Desktop" /v FontSmoothing /t REG_SZ /d 2 /f
+
+:: Animate windows when minimising and maximising
+reg add "HKCU\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
+
+:: Animations in the taskbar
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarAnimations /t REG_DWORD /d 0 /f
+
+:: Enable Peek
+reg add "HKCU\Software\Microsoft\Windows\DWM" /v EnableAeroPeek /t REG_DWORD /d 0 /f
+
+:: Save taskbar thumbnail previews
+reg add "HKCU\Software\Microsoft\Windows\DWM" /v AlwaysHibernateThumbnails /t REG_DWORD /d 0 /f
+
+:: Show translucent selection rectangle
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewAlphaSelect /t REG_DWORD /d 0 /f
+
+:: Use drop shadows for icon labels on the desktop
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewShadow /t REG_DWORD /d 0 /f
+
+:: Show shadows under windows
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v DropShadow /t REG_DWORD /d 0 /f
+
+:: Disable Windows 11 Animation effects
+
+:: Disable Animation Effects / Window Animations (User Level)
+reg add "HKCU\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
+
+:: Enforce "Do not allow window animations" (Machine Policy Level)
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DWM" /v DisallowAnimations /t REG_DWORD /d 1 /f
+
+:: Enforce "Turn off all unnecessary animations" (User Policy Level)
+reg add "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop" /v UserAnimation /t REG_DWORD /d 0 /f
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$code = '[DllImport(\"user32.dll\")] public static extern bool SystemParametersInfo(uint action, uint param, uint value, uint winIni);'; $type = Add-Type -MemberDefinition $code -Name 'Win32' -Namespace 'CustomAPI' -PassThru; $type::SystemParametersInfo(0x103F, 0, 0, 3); $type::SystemParametersInfo(0x1043, 0, 0, 3); Write-Host 'Animation effects have been forced OFF system-wide.'"
+
+echo Restarting File Explorer to apply changes...
+taskkill /f /im explorer.exe
+start explorer.exe
+
+goto opti1
+
+:opti1
+::reg add "HKLM\SYSTEM\CurrentControlSet\Services\pci\Parameters" /v "ASPMOptOut" /t REG_DWORD /d "0" /f
+::reg add "HKLM\SYSTEM\CurrentControlSet\Control\Processor" /v "AllowPepPerfStates" /t REG_DWORD /d "0" /f
 
 ::Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "PriorityControl" /t REG_DWORD /d "50" /f
 ::Reg add "HKLM\System\CurrentControlSet\Control\Session Manager\kernel" /v "DisableOverlappedExecution" /t REG_DWORD /d "0" /f
@@ -378,8 +448,8 @@ netsh int tcp set global timestamps=disabled
 netsh int tcp set global initialRto=2000 
 netsh int tcp set global nonsackrttresiliency=disabled 
 netsh int tcp set global maxsynretransmissions=2
-::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Flow Control' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
-::@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Interrupt Moderation' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Flow Control' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Interrupt Moderation' -DisplayValue 'Enabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Green Ethernet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Gigabit Lite' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Jumbo Frame' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
@@ -438,9 +508,6 @@ ipconfig/flushdns
 goto opti2
 
 :opti2
-
-::DISM.exe /Online /Cleanup-image /Restorehealth
-::sfc /scannow
 
 ::goto exitmsg
 
@@ -550,14 +617,14 @@ echo  2 - Nvidia GPU'S
 echo  0 - Exit
 
 echo.
-set /p s=Choose an option: 
+set /p s=Choose an number: 
 
 
 if "%s%"=="1" goto amd
 if "%s%"=="2" goto nvidia
 ::if "%s%"=="3" goto intel
 ::if "%s%"=="3" goto restor
-if "%s%"=="0" goto exitmsg
+if "%s%"=="0" goto sysc
 
 echo Invalid choice, exiting...
 pause
@@ -568,7 +635,7 @@ cls
 echo Nvidia...
 :: Nvidia GPU Driver Priority Boost
  REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
-goto exitmsg
+goto next3
 
 :amd
 cls
@@ -594,14 +661,14 @@ for /f "delims=" %%K in ('reg query "%BASE%" /s 2^>nul ^| findstr /i /r "\\UMD$"
     echo.
 )
 
-goto exitmsg
+goto next3
 
 :intel
 cls
 echo Intel...
 :: INTEL GPU Driver Priority Boost
 REG ADD "HKLM\SYSTEM\CurrentControlSet\Services\igdkmd64\Parameters" /v ThreadPriority /t REG_DWORD /d 0x00000018 /f >nul
-goto exitmsg
+goto next3
 
 :restor
 cls
@@ -642,6 +709,24 @@ bcdedit /deletevalue useplatformtick
 bcdedit /deletevalue useplatformclock
 bcdedit /deletevalue tscsyncpolicy
 
+goto exitmsg
+
+:next3
+cls
+echo  1 - Scan System File
+echo  2 - Skip
+
+echo.
+set /p s=Choose an number: 
+
+
+if "%s%"=="1" goto scanf
+if "%s%"=="2" goto exitmsg
+
+:scanf
+cls
+DISM.exe /Online /Cleanup-image /Restorehealth
+sfc /scannow
 goto exitmsg
 
 :exitmsg

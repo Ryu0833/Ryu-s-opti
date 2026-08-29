@@ -4,12 +4,12 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     exit
 }
 
-# GitHub Repository Details
+# GitHub Repository 
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
 
-# Define your 4 options with their respective paths or direct URLs
+#  options 
 $scripts = @(
     @{ 
         Name     = "Ryu Power"
@@ -61,6 +61,8 @@ while ($true) {
     
     if ($choice -eq '0') {
         Write-Host "Exiting launcher." -ForegroundColor Green
+        [void](Read-Host)
+        Clear-Host
         break
     }
 
@@ -119,7 +121,7 @@ while ($true) {
         Write-Host "`nPress Enter to return to the menu..."
         [void](Read-Host)
     } else {
-        Write-Host "Invalid selection. Please enter a number between 1 and 5." -ForegroundColor Red
+        Write-Host "Invalid selection. Please enter a number of scripte ." -ForegroundColor Red
         Start-Sleep -Seconds 1
     }
 }
