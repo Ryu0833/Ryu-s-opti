@@ -808,18 +808,34 @@ do {
         $otherPointer = 0
         foreach ($dev in $sortedOtherDevs) {
             $msiStatusStr = "Skipped (No HW/INF Support)"
-            if ($dev.IrqConflict -and $dev.HwMsiSupport) {
-                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
-                Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
-                $msiStatusStr = "MSI Enabled (Conflict Override - HW Support)"
-            } elseif ($null -ne $dev.InfMsiValue) {
-                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
-                Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value $dev.InfMsiValue -Type DWord -Force
-                $msiStatusStr = if ($dev.InfMsiValue -eq 1) { "MSI Enabled (per INF)" } else { "MSI Disabled (per INF)" }
-            } elseif ($dev.HwMsiSupport) {
-                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
-                Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
-                $msiStatusStr = "MSI Enabled (HW Support)"
+            
+            # --- MODIFIED AUDIO MSI LOGIC ---
+            if ($dev.Class -eq 'Audio') {
+                if ($dev.IrqConflict -and $dev.HwMsiSupport) {
+                    if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                    Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
+                    $msiStatusStr = "MSI Enabled (Audio Conflict Override)"
+                } elseif ($null -ne $dev.InfMsiValue) {
+                    if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                    Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value $dev.InfMsiValue -Type DWord -Force
+                    $msiStatusStr = if ($dev.InfMsiValue -eq 1) { "MSI Enabled (per INF)" } else { "MSI Disabled (per INF)" }
+                }
+            } 
+            # --- ORIGINAL LOGIC FOR NON-AUDIO DEVICES ---
+            else {
+                if ($dev.IrqConflict -and $dev.HwMsiSupport) {
+                    if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                    Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
+                    $msiStatusStr = "MSI Enabled (Conflict Override - HW Support)"
+                } elseif ($null -ne $dev.InfMsiValue) {
+                    if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                    Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value $dev.InfMsiValue -Type DWord -Force
+                    $msiStatusStr = if ($dev.InfMsiValue -eq 1) { "MSI Enabled (per INF)" } else { "MSI Disabled (per INF)" }
+                } elseif ($dev.HwMsiSupport) {
+                    if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                    Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
+                    $msiStatusStr = "MSI Enabled (HW Support)"
+                }
             }
 
             $targetPriorityVal = 3
