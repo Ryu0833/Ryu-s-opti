@@ -31,10 +31,8 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppPrivacy" /v LetAppsRunInBac
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\fssProv" /v "EncryptProtocol" /t REG_DWORD /d "0" /f
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule" /v "DisableRpcOver" /t REG_DWORD /d "1" /f
 
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Reliability" /v "TimeStampInterval " /t REG_DWORD /d "1" /f
-
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f 
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" /v "TimeStampEnabled" /t REG_DWORD /d "0" /f
+ 
 
 bcdedit /set x2apicpolicy Enable
 
@@ -101,6 +99,8 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "?:\pagefile.sys" /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "ExistingPageFile" /t REG_SZ /d "C:\pagefile.sys" /f
 
+Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
+
 cls
 echo compititf player ?
 echo  1 - yes
@@ -113,6 +113,11 @@ if "%choice%"=="1" goto :opti01
 if "%choice%"=="2" goto opti1
 
 :opti01
+
+Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "63" /f
+
+powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+
 
 ::8gb8gb
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "C:\pagefile.sys 8192 8192" /f
@@ -171,6 +176,11 @@ start explorer.exe
 goto opti1
 
 :opti1
+
+powershell -Command "$ndisv = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*NDIS Virtual Network Adapter Enumerator*'}; foreach ($m in $ndisv) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+powershell -Command "$remote = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*Remote Desktop Device Redirector Bus*'}; foreach ($m in $remote) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+
+
 ::reg add "HKLM\SYSTEM\CurrentControlSet\Services\pci\Parameters" /v "ASPMOptOut" /t REG_DWORD /d "0" /f
 ::reg add "HKLM\SYSTEM\CurrentControlSet\Control\Processor" /v "AllowPepPerfStates" /t REG_DWORD /d "0" /f
 
@@ -190,9 +200,6 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Power\EnergyEstimation\TaggedEner
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Power\EnergyEstimation\TaggedEnergy" /v "TelemetryMaxTagPerApplication" /t REG_DWORD /d "0" /f
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" /v "CountOperations" /t REG_DWORD /d "0" /f
-
-
-Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
 
 
 logman stop "DiagLog" -ets
@@ -250,18 +257,6 @@ for /L %%i in (0,1,9) do (
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "PagePriority" /t REG_DWORD /d "5" /f
 
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Application Name" /t REG_SZ /d "!EXE_NAME!" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "DSCP Value" /t REG_SZ /d "46" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Throttle Rate" /t REG_SZ /d "-1" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Protocol" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Local IP" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Local Port" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Local IP Prefix Length" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Remote Port" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Remote IP" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Remote IP Prefix Length" /t REG_SZ /d "*" /f
-    reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\!POLICY_NAME!" /v "Version" /t REG_SZ /d "1.0" /f
 )
 )
 
@@ -369,6 +364,12 @@ if "%choice%"=="1" goto nett
 if "%choice%"=="2" goto opti2
 
 :nett
+
+::powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_pacer"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_tcpip6"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_server"
+
+
 netsh interface tcp set global autotuninglevel=restricted
 for /f "skip=3 tokens=1-4,*" %%a in ('netsh interface ipv4 show subinterfaces') do (
     set "iface=%%e"
@@ -473,10 +474,11 @@ netsh int tcp set global maxsynretransmissions=2
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v DefaultTTL /d 64 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v MaxUserPort /d 65534 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v TcpTimedWaitDelay /d 30 /f 
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f 
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 0 /f
 reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\QoS" /t REG_SZ /v "Do not use NLA" /d 1 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /t REG_DWORD /v LargeSystemCache /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
+::reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "00000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "04000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "0200" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 

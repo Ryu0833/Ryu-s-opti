@@ -18,7 +18,7 @@ $scripts = @(
         FileName = "Ryu power.bat" 
     },
     @{ 
-        Name     = "Opti"
+        Name     = "Opti(PC restart)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/2"
         FileName = "opti.bat" 
@@ -30,7 +30,7 @@ $scripts = @(
         FileName = "clearshader.bat" 
     },
     @{ 
-        Name     = "Timer Resolution Script"
+        Name     = "Timer Resolution Script(Windows 11 only\PC restart)"
         Type     = "RepoWithExe"
         Folder   = "Ryu Opti/Advanced Tweaks/1"
         FileName = "timer00.bat" 
@@ -38,7 +38,7 @@ $scripts = @(
         ExeName  = "SetTimerResolution.exe"
     },
     @{ 
-        Name     = "Auto MSI mode"
+        Name     = "Auto MSI mode(PC restart)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/Advanced Tweaks/2"
         FileName = "Auto MSI mode .bat" 
