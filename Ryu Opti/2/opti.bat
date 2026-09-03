@@ -15,6 +15,8 @@ if "%choice%"=="2" goto exitmsg1
 cls
 @powerShell -command "Disable-MMAgent -mc"
 
+powershell -Command "Get-PnpDevice | Where-Object {$_.ConfigManagerErrorCode -eq 45 -or $_.Status -eq 'Disconnected'} | ForEach-Object { Write-Host 'Removing:' $_.Name; pnputil /remove-device $_.InstanceId }"
+
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v EnableTransparency /t REG_DWORD /d 0 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "TurnOffWindowsAnimations" /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarAnimations" /t REG_DWORD /d 0 /f
@@ -49,6 +51,9 @@ bcdedit /deletevalue disabledynamictick
 bcdedit /deletevalue useplatformclock
 bcdedit /deletevalue useplatformtick
 bcdedit /deletevalue tscsyncpolicy
+
+powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Enable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "$targets = 'WindowsSubsystemForLinux','CrossDevice','ParentalControls','SecureAssessmentBrowser','RawImageExtension','XboxGamingOverlay'; foreach ($t in $targets) { Get-AppxPackage -Name \"*$t*\" -AllUsers | ForEach-Object { if ($_.NonRemovable -or $_.IsInbox) { Write-Host \"[SKIPPED - PROTECTED SYSTEM APP] $($_.Name)\" } else { Write-Host \"[REMOVING] $($_.Name)...\" ; Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction SilentlyContinue } }; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like \"*$t*\" | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue } }; Set-Service -Name WpcMonSvc -StartupType Disabled -ErrorAction SilentlyContinue; Stop-Service -Name WpcMonSvc -Force -ErrorAction SilentlyContinue; Write-Host '[SERVICE] Disabled Parental Controls service (WpcMonSvc).'"
 
@@ -116,8 +121,10 @@ if "%choice%"=="2" goto opti1
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "63" /f
 
-::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
 
+powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+
+bcdedit /set useplatformtick Yes
 
 ::8gb8gb
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "C:\pagefile.sys 8192 8192" /f
