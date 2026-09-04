@@ -1,7 +1,7 @@
 @echo off
 
 setlocal ENABLEDELAYEDEXPANSION
-echo rak baghi dir power plan ta3i ?
+echo rak baghi dir Power plan ta3i ?
 echo  1 - yes
 echo  2 - no 
 
@@ -33,14 +33,6 @@ for /f "tokens=*" %%L in ('powercfg -list') do (
     )
 )
 
-    echo [INFO] Creating new Ryu powerplan...
-    ::for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
-    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_BALANCED') do set "GUID=%%i" 
-    set "GUID=!GUID:(=!"
-    set "GUID=!GUID:)=!"
-    echo Detected GUID = !GUID!
-    powercfg -changename !GUID! "Ryu Powerplan" "Ryu custom performance power plan"
-    powercfg -setactive !GUID!
 
 goto cpus
 
@@ -50,14 +42,27 @@ cls
 echo Cha3ndkl cpu ?
 echo  1 - AMD
 echo  2 - Intel 
+echo  0 - Delete Ryu power
 
 echo ================================
 set /p choice="Select number: "
 
 if "%choice%"=="1" goto cpua
 if "%choice%"=="2" goto cpui
+if "%choice%"=="0" goto exit
 
 :cpua
+cls
+set "GUID="
+
+    echo [INFO] Creating new Ryu powerplan...
+    ::for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
+    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_BALANCED') do set "GUID=%%i" 
+    set "GUID=!GUID:(=!"
+    set "GUID=!GUID:)=!"
+    echo Detected GUID = !GUID!
+    powercfg -changename !GUID! "Ryu Powerplan" "Ryu custom performance power plan"
+    powercfg -setactive !GUID!
 cls
 powercfg -setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0
 powercfg -setacvalueindex SCHEME_CURRENT 48672f38-7a9a-4bb2-8bf8-3d85be19de4e 2bfc24f9-5ea2-4801-8213-3dbae01aa39d 0
@@ -65,7 +70,7 @@ powercfg -setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48
 powercfg -setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 d4e98f31-5ffe-4ce1-be31-1b38b384c009 0
 powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 4b92d758-5a24-4851-a470-815d78aee119 100
 powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 7b224883-b3cc-4d79-819f-8374152cbe7c 100
-powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 45bcc044-d885-43e2-8605-ee0ec6e96b59 100
+powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 45bcc044-d885-43e2-8605-ee0ec6e96b59 0
 powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 893dee8e-2bef-41e0-89c6-b55d0929964c 0
 powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 bc5038f7-23e0-4960-96da-33abaf5935ec 100
 powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 4d2b0152-7d5c-498b-88e2-34345392a2c5 5000
@@ -79,6 +84,18 @@ powercfg -setacvalueindex SCHEME_CURRENT 54533251-82be-4824-96c1-47b60b740d00 61
 goto exit
 
 :cpui
+cls
+
+set "GUID="
+
+    echo [INFO] Creating new Ryu powerplan...
+    for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_MIN') do set "GUID=%%i"
+    ::for /f "tokens=4" %%i in ('powercfg -duplicatescheme SCHEME_BALANCED') do set "GUID=%%i" 
+    set "GUID=!GUID:(=!"
+    set "GUID=!GUID:)=!"
+    echo Detected GUID = !GUID!
+    powercfg -changename !GUID! "Ryu Powerplan" "Ryu custom performance power plan"
+    powercfg -setactive !GUID!
 cls
 powercfg -setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0
 powercfg -setacvalueindex SCHEME_CURRENT 48672f38-7a9a-4bb2-8bf8-3d85be19de4e 2bfc24f9-5ea2-4801-8213-3dbae01aa39d 0
@@ -101,10 +118,10 @@ goto exit
 
 :exit
 cls
-echo IDA MAKHDAMLKCH BIEN dir ta3k l9dim powerplan
+echo IDA MAKHDAMLKCH BIEN dir "Delete Ryu power". 
 echo Adrob tala 3la TikTok w matnssach follow 
+pause
 start https://linktr.ee/Ryu0833
 
-pause
 endlocal
 exit /b 0

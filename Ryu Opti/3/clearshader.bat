@@ -72,9 +72,9 @@ goto exit
 
 :exit
 cls
-echo Adrob tala 3la TikTok w matnssach follow 
+echo Adrob tala 3la TikTok w matnssach follow
+pause 
 start https://linktr.ee/Ryu0833
 
-pause
 endlocal
 exit /b 0

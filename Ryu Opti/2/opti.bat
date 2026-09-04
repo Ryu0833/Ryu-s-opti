@@ -485,7 +485,7 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_D
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 0 /f
 reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\QoS" /t REG_SZ /v "Do not use NLA" /d 1 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /t REG_DWORD /v LargeSystemCache /d 0 /f 
-::reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "00000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\26" /v "04000000" /t REG_BINARY /d "0000000000000000000000000500000000000000000000000000000000000000ff00000000000000" /f 
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Nsi\{eb004a03-9b1a-11d4-9123-0050047759bc}\0" /v "0200" /t REG_BINARY /d "0000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000ff000000000000000000000000000000000000000000ff000000000000000000000000000000" /f 
@@ -623,7 +623,7 @@ echo  1 - AMD GPU'S
 echo  2 - Nvidia GPU'S
 ::echo  3 - Intel GPU'S
 ::echo  3 - Restor
-echo  0 - Exit
+echo  0 - Skip
 
 echo.
 set /p s=Choose an number: 
@@ -633,7 +633,7 @@ if "%s%"=="1" goto amd
 if "%s%"=="2" goto nvidia
 ::if "%s%"=="3" goto intel
 ::if "%s%"=="3" goto restor
-if "%s%"=="0" goto sysc
+if "%s%"=="0" goto next3
 
 echo Invalid choice, exiting...
 pause
@@ -743,9 +743,8 @@ endlocal
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
 echo Adrob tala 3la TikTok w matnssach follow
-echo Press any key to close.
+pause 
 start https://linktr.ee/Ryu0833
-pause >nul
 
 exit
 
@@ -754,8 +753,8 @@ exit
 endlocal
 cls
 echo Adrob tala 3la TikTok w matnssach follow
-echo Press any key to close.
-start https://linktr.ee/Ryu0833
 pause
+start https://linktr.ee/Ryu0833
+
 
 exit

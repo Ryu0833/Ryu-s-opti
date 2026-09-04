@@ -32,11 +32,13 @@ if "%choice%"=="2" goto 0.5
 
 :1
 
+bcdedit /set useplatformtick Yes
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d "1" /f
 goto exit0
 
 :0.5
 
+bcdedit /set useplatformtick Yes
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d "1" /f
 
 REM --- Vérifier si l'exécutable existe ---
@@ -96,6 +98,7 @@ goto exit1
 cls
 echo IDA MAKHDAMLKCH BIEN DIR RESTOR
 echo Adrob tala 3la TikTok w matnssach follow
+pause
 start https://linktr.ee/Ryu0833
 
 exit
@@ -103,6 +106,7 @@ exit
 :exit1
 cls
 echo Adrob tala 3la TikTok w matnssach follow
+pause
 start https://linktr.ee/Ryu0833
 
 
