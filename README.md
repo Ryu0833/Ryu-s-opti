@@ -47,13 +47,19 @@ When you run the interactive launcher, you can choose from the following optimiz
 
 
 
-\* Script 3: Timer Resolution Script + EXE (Advanced Tweaks/1/timer00.bat + SetTimerResolution.exe)
+\* Script 3: Shader Cache Cleanup (Ryu Opti/3/clearshader.bat)
+
+&#x20; \* Remove  GPU Shader Caches.
+
+
+
+\* Script 4: Timer Resolution Script + EXE (Ryu Opti/Advanced Tweaks/1/timer00.bat + SetTimerResolution.exe)
 
 &#x20; \* Automatically pulls and executes the SetTimerResolution.exe.
 
 
 
-\* Script 4: Advanced Tweaks - Auto MSI Mode (Advanced Tweaks/2/Auto MSI mode.bat)
+\* Script 5: Advanced Tweaks - Auto MSI Mode (Ryu Opti/Advanced Tweaks/2/Auto MSI mode.bat)
 
 &#x20; \* Configures Message Signaled Interrupts (MSI/MSI-X) for critical hardware components like your GPU and USB controllers.
 

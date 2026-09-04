@@ -39,36 +39,54 @@ echo ==========================================
 echo.
 
 :: Windows / DirectX
-call :ClearCache "%LOCALAPPDATA%\D3DSCache" "Windows DirectX Shader Cache"
-call :ClearCache "%LOCALAPPDATA%\Temp\DXCache" "DX12 Pipeline Cache"
-call :ClearCache "%LOCALAPPDATA%\Microsoft\DirectX Shader Cache" "Windows DirectX Alt Cache"
+del /q /s /f "%LOCALAPPDATA%\D3DSCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\D3DSCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\Temp\DXCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\Temp\DXCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\Microsoft\DirectX Shader Cache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\Microsoft\DirectX Shader Cache\*") do rmdir "%%p" /s /q >nul 2>&1
 
 :: Additional pipeline caches
-call :ClearCache "%LOCALAPPDATA%\Temp\D3DCache" "Direct3D Pipeline Cache"
-call :ClearCache "%LOCALAPPDATA%\Temp\NVIDIA Corporation\NV_Cache" "NVIDIA Pipeline Cache"
+del /q /s /f "%LOCALAPPDATA%\Temp\D3DCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\Temp\D3DCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\Temp\NVIDIA Corporation\NV_Cache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\Temp\NVIDIA Corporation\NV_Cache\*") do rmdir "%%p" /s /q >nul 2>&1
 
 :: AMD caches
-call :ClearCache "%LOCALAPPDATA%\AMD\DXCache" "AMD DX Cache"
-call :ClearCache "%LOCALAPPDATA%\AMD\GLCache" "AMD OpenGL Cache"
-call :ClearCache "%LOCALAPPDATA%\AMD\VkCache" "AMD Vulkan Cache"
+del /q /s /f "%LOCALAPPDATA%\AMD\DXCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\AMD\DXCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\AMD\GLCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\AMD\GLCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\AMD\VkCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\AMD\VkCache\*") do rmdir "%%p" /s /q >nul 2>&1
 
 :: NVIDIA caches
-call :ClearCache "%LOCALAPPDATA%\NVIDIA\DXCache" "NVIDIA DX Cache"
-call :ClearCache "%LOCALAPPDATA%\NVIDIA\GLCache" "NVIDIA OpenGL Cache"
-call :ClearCache "%LOCALAPPDATA%\NVIDIA\VkCache" "NVIDIA Vulkan Cache"
-call :ClearCache "%APPDATA%\NVIDIA\ComputeCache" "NVIDIA Compute Cache"
+del /q /s /f "%LOCALAPPDATA%\NVIDIA\DXCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\NVIDIA\DXCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\NVIDIA\GLCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\NVIDIA\GLCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%LOCALAPPDATA%\NVIDIA\VkCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\NVIDIA\VkCache\*") do rmdir "%%p" /s /q >nul 2>&1
+del /q /s /f "%APPDATA%\NVIDIA\ComputeCache\*.*" >nul 2>&1
+for /d %%p in ("%APPDATA%\NVIDIA\ComputeCache\*") do rmdir "%%p" /s /q >nul 2>&1
 
 :: Intel cache
-call :ClearCache "%LOCALAPPDATA%\Intel\ShaderCache" "Intel Shader Cache"
+del /q /s /f "%LOCALAPPDATA%\Intel\ShaderCache\*.*" >nul 2>&1
+for /d %%p in ("%LOCALAPPDATA%\Intel\ShaderCache\*") do rmdir "%%p" /s /q >nul 2>&1
 
+
+cls
 echo.
 echo ==========================================
 echo Cleanup complete
 echo ==========================================
 echo.
+echo.
+echo Adrob tala 3la TikTok w matnssach follow
 
 pause
-goto exit
+start https://linktr.ee/Ryu0833
+exit /b 0
 
 :exit
 cls
