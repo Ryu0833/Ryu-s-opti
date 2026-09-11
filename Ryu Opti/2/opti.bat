@@ -128,6 +128,8 @@ Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32Priorit
 
 ::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
 
+bcdedit /set useplatformclock false
+bcdedit /set disabledynamictick yes
 bcdedit /set useplatformtick Yes
 ::bcdedit /set tscsyncpolicy enhanced
 
