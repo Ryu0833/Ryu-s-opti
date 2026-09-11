@@ -106,6 +106,8 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f
 
+netsh interface tcp set global autotuninglevel=enable
+
 cls
 echo compititf player ?
 echo  1 - yes
@@ -119,13 +121,15 @@ if "%choice%"=="2" goto opti1
 
 :opti01
 
+netsh interface tcp set global autotuninglevel=disable
+
 Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "63" /f
 
 
 ::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
 
 bcdedit /set useplatformtick Yes
-bcdedit /set tscsyncpolicy enhanced
+::bcdedit /set tscsyncpolicy enhanced
 
 ::8gb8gb
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PagingFiles" /t REG_SZ /d "C:\pagefile.sys 8192 8192" /f
