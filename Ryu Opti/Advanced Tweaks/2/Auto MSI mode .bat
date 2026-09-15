@@ -367,13 +367,24 @@ function Get-PciDevices {
                 $isWdf = $false
                 if ($svcName) {
                     $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
-                    if ((Test-Path "$svcReg\Wdf") -or (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\Wdf")) {
+                    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
+                    $deps = [string]($svcProps.DependOnService -join " ")
+                    $imgPath = [string]$svcProps.ImagePath
+
+                    # 1. Check if service explicitly depends on WDF or NetAdapterCx drivers
+                    if ($deps -match "(?i)Wdf01|NetAdapterCx" -or $imgPath -match "(?i)NetAdapterCx\.sys|wdf01000\.sys") {
                         $isWdf = $true
-                    } else {
-                        $svcImagePath = (Get-ItemProperty -Path $svcReg -Name "ImagePath" -ErrorAction SilentlyContinue).ImagePath
-                        if ($svcImagePath -like "*wdf*" -or $svcImagePath -like "*netadapter*") {
+                    }
+                    # 2. Check if the Service Wdf key contains active KMDF/UMDF version properties
+                    elseif (Test-Path "$svcReg\Wdf") {
+                        $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
+                        if ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection) {
                             $isWdf = $true
                         }
+                    }
+                    # 3. Check for NetAdapterCx framework registrations under Device Parameters
+                    elseif (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\NetAdapterCx") {
+                        $isWdf = $true
                     }
                 }
                 $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
