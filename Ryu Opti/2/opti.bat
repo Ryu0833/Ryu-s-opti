@@ -130,7 +130,7 @@ netsh interface tcp set global autotuninglevel=disable
 
 ::bcdedit /set useplatformclock false
 bcdedit /set disabledynamictick yes
-bcdedit /set useplatformtick Yes
+::bcdedit /set useplatformtick Yes
 ::bcdedit /set tscsyncpolicy enhanced
 
 ::8gb8gb
