@@ -126,11 +126,11 @@ netsh interface tcp set global autotuninglevel=disable
 ::Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "63" /f
 
 
-::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
 
-::bcdedit /set useplatformclock false
+bcdedit /set useplatformclock false
 bcdedit /set disabledynamictick yes
-::bcdedit /set useplatformtick Yes
+bcdedit /set useplatformtick Yes
 ::bcdedit /set tscsyncpolicy enhanced
 
 ::8gb8gb
@@ -475,6 +475,7 @@ netsh int tcp set global maxsynretransmissions=2
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on Magic Packet' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on pattern match' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'WOL & Shutdown Link Speed' -DisplayValue 'Not Speed Down' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Shutdown Wake-On-Lan' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Enable-NetAdapterChecksumOffload -Name *" 
 @powershell -command "Set-NetOffloadGlobalSetting -Chimney 'Disabled'"
 @powershell -command "Set-NetOffloadGlobalSetting -TaskOffload 'Enabled'"

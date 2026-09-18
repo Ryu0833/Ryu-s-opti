@@ -363,32 +363,37 @@ function Get-PciDevices {
             $drvPath = $enumRegProps.Driver
 
             $driverType = "N/A"
-            if ($dev.PNPClass -eq 'Net') {
-                $isWdf = $false
-                if ($svcName) {
-                    $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
-                    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
-                    $deps = [string]($svcProps.DependOnService -join " ")
-                    $imgPath = [string]$svcProps.ImagePath
 
-                    # 1. Check if service explicitly depends on WDF or NetAdapterCx drivers
-                    if ($deps -match "(?i)Wdf01|NetAdapterCx" -or $imgPath -match "(?i)NetAdapterCx\.sys|wdf01000\.sys") {
-                        $isWdf = $true
-                    }
-                    # 2. Check if the Service Wdf key contains active KMDF/UMDF version properties
-                    elseif (Test-Path "$svcReg\Wdf") {
-                        $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
-                        if ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection) {
-                            $isWdf = $true
-                        }
-                    }
-                    # 3. Check for NetAdapterCx framework registrations under Device Parameters
-                    elseif (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\NetAdapterCx") {
-                        $isWdf = $true
-                    }
-                }
-                $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
-            }
+if ($dev.PNPClass -eq 'Net') {
+    $isWdf = $false
+
+    if ($svcName) {
+        $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
+        $pnpWdfReg = "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\Wdf"
+
+        # Query service registry properties once
+        $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
+        $deps = [string]($svcProps.DependOnService -join " ")
+        $imgPath = [string]$svcProps.ImagePath
+
+        # 1. Check presence of WDF keys
+        $hasWdfKey = (Test-Path "$svcReg\Wdf") -or (Test-Path $pnpWdfReg)
+
+        # 2. Check service dependencies or image binary paths
+        $hasWdfImg = $imgPath -match "(?i)wdf|netadapter"
+        $hasWdfDeps = $deps -match "(?i)Wdf01|NetAdapterCx"
+
+        # 3. Check KMDF/UMDF version entries
+        $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
+        $hasWdfVersionProps = ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection)
+
+        if ($hasWdfKey -or $hasWdfImg -or $hasWdfDeps -or $hasWdfVersionProps) {
+            $isWdf = $true
+        }
+
+        $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
+    }
+}
 
             $hwMsiSupported = $false
             $hwInterruptSupportValue = 0
@@ -854,6 +859,9 @@ do {
             if ($dev.Class -eq 'Audio') {
                 $targetPriorityVal = 2
                 $targetPriorityName = "Normal"
+            } elseif ($dev.Class -eq 'Net') {
+                $targetPriorityVal = 1
+                $targetPriorityName = "Low"
             }
 
             if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path $dev.RegPrioPath -Force | Out-Null }
