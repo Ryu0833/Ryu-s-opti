@@ -126,11 +126,11 @@ netsh interface tcp set global autotuninglevel=disable
 ::Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "63" /f
 
 
-powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
+::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
 
-bcdedit /set useplatformclock false
+::bcdedit /set useplatformclock false
 bcdedit /set disabledynamictick yes
-bcdedit /set useplatformtick Yes
+::bcdedit /set useplatformtick Yes
 ::bcdedit /set tscsyncpolicy enhanced
 
 ::8gb8gb
