@@ -365,36 +365,39 @@ function Get-PciDevices {
 
             $driverType = "N/A"
 
-if ($dev.PNPClass -eq 'Net') {
-    $isWdf = $false
+            if ($dev.PNPClass -eq 'Net') {
+                $isWdf = $false
 
-    if ($svcName) {
-        $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
-        $pnpWdfReg = "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\Wdf"
+                if ($svcName) {
+                    $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
+                    $pnpWdfReg = "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\Wdf"
 
-        # Query service registry properties once
-        $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
-        $deps = [string]($svcProps.DependOnService -join " ")
-        $imgPath = [string]$svcProps.ImagePath
+                    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
+                    $deps = [string]($svcProps.DependOnService -join " ")
+                    $imgPath = [string]$svcProps.ImagePath
 
-        # 1. Check presence of WDF keys
-        $hasWdfKey = (Test-Path "$svcReg\Wdf") -or (Test-Path $pnpWdfReg)
+                    $hasWdfKey = (Test-Path "$svcReg\Wdf") -or (Test-Path $pnpWdfReg)
+                    $hasWdfImg = $imgPath -match "(?i)wdf|netadapter"
+                    $hasWdfDeps = $deps -match "(?i)Wdf01|NetAdapterCx"
 
-        # 2. Check service dependencies or image binary paths
-        $hasWdfImg = $imgPath -match "(?i)wdf|netadapter"
-        $hasWdfDeps = $deps -match "(?i)Wdf01|NetAdapterCx"
+                    $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
+                    $hasWdfVersionProps = ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection)
 
-        # 3. Check KMDF/UMDF version entries
-        $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
-        $hasWdfVersionProps = ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection)
+                    if ($hasWdfKey -or $hasWdfImg -or $hasWdfDeps -or $hasWdfVersionProps) {
+                        $isWdf = $true
+                    }
 
-        if ($hasWdfKey -or $hasWdfImg -or $hasWdfDeps -or $hasWdfVersionProps) {
-            $isWdf = $true
-        }
+                    $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
+                }
+            }
 
-        $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
-    }
-}
+            # Normalize Class and Identify iGPU
+            $normalizedClass = if ($dev.PNPClass -eq 'Media' -or $dev.Name -match '(?i)audio') { 'Audio' } else { $dev.PNPClass }
+            $igpuRegex = '(?i)(Intel.*(UHD|HD|Iris).*Graphics|^Intel\(R\) Graphics|AMD Radeon(?:\(TM\))?\s*Graphics|AMD Radeon.*Vega.*Graphics|Basic Display Adapter)'
+            
+            if ($normalizedClass -eq 'Display' -and $dev.Name -match $igpuRegex) {
+                $normalizedClass = 'iGPU'
+            }
 
             $hwMsiSupported = $false
             $hwInterruptSupportValue = 0
@@ -494,8 +497,6 @@ if ($dev.PNPClass -eq 'Net') {
                 }
             }
 
-            $normalizedClass = if ($dev.PNPClass -eq 'Media' -or $dev.Name -match '(?i)audio') { 'Audio' } else { $dev.PNPClass }
-
             $treePorts = [System.Collections.Generic.List[object]]::new()
             $treePortIds = [System.Collections.Generic.HashSet[string]]::new()
             $currId = $pnpID
@@ -520,7 +521,7 @@ if ($dev.PNPClass -eq 'Net') {
                     if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)" -and $pName -notmatch "(?i)(Root Complex)") {
                         $includeInTree = $true
                     }
-                } elseif ($normalizedClass -eq 'Display') {
+                } elseif ($normalizedClass -in @('Display', 'iGPU')) {
                     if ($pName -match "(?i)(Upstream Switch Port|Downstream Switch Port|AMD.*PCI.*Express|Root)"-and $pName -notmatch "(?i)(Root Complex)") {
                         $includeInTree = $true
                     }
@@ -750,12 +751,9 @@ do {
         $allEligiblePCores = @($cpu.PCores | Where-Object { $_.PhysicalCoreIndex -ne 0 } | Sort-Object PhysicalCoreIndex -Descending)
         $coreZeroMsg = "Core 0 EXCLUDED"
 
-        # Regex definition to accurately capture Integrated GPUs and Basic fallback adapters
-        $igpuRegex = '(?i)(Intel.*(UHD|HD|Iris).*Graphics|^Intel\(R\) Graphics|AMD Radeon(?:\(TM\))?\s*Graphics|AMD Radeon.*Vega.*Graphics|Basic Display Adapter)'
-
-        $displayDevs = @($devList | Where-Object { $_.Class -eq 'Display' -and $_.Name -notmatch $igpuRegex })
-        $igpuDevs    = @($devList | Where-Object { $_.Class -eq 'Display' -and $_.Name -match $igpuRegex })
-        $otherDevs   = @($devList | Where-Object { $_.Class -ne 'Display' })
+        $displayDevs = @($devList | Where-Object { $_.Class -eq 'Display' })
+        $igpuDevs    = @($devList | Where-Object { $_.Class -eq 'iGPU' })
+        $otherDevs   = @($devList | Where-Object { $_.Class -ne 'Display' -and $_.Class -ne 'iGPU' })
 
         # Pool Integrated GPUs alongside other shared devices (Networking, Audio, etc.) instead of isolating them
         if ($igpuDevs.Count -gt 0) {
@@ -845,7 +843,7 @@ do {
         }
 
         $sortedOtherDevs = $otherDevs | Sort-Object {
-            if ($_.Class -eq 'Display') { 0 }
+            if ($_.Class -in @('Display', 'iGPU')) { 0 }
             elseif ($_.Class -eq 'USB') { 1 }
             elseif ($_.Class -eq 'Net') { 2 }
             elseif ($_.Class -eq 'Audio') { 3 }
@@ -898,11 +896,18 @@ do {
             if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path $dev.RegPrioPath -Force | Out-Null }
             Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePriority" -Value $targetPriorityVal -Type DWord -Force
 
-            if ($dev.Class -eq 'Net' -and $dev.DriverType -eq 'NDIS') {
+            # Handled without specific core pinning: NDIS Network Devices and Integrated GPUs (iGPU)
+            if (($dev.Class -eq 'Net' -and $dev.DriverType -eq 'NDIS') -or $dev.Class -eq 'iGPU') {
                 Remove-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
                 Remove-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
-                Write-Host "[NET-NDIS] $($dev.Name)" -ForegroundColor Cyan
-                Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (NDIS Driver - RSS Preserved)" -ForegroundColor Gray
+
+                if ($dev.Class -eq 'iGPU') {
+                    Write-Host "[iGPU]     $($dev.Name)" -ForegroundColor Magenta
+                    Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (Integrated GPU - No Core Lock)" -ForegroundColor Gray
+                } else {
+                    Write-Host "[NET-NDIS] $($dev.Name)" -ForegroundColor Cyan
+                    Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (NDIS Driver - RSS Preserved)" -ForegroundColor Gray
+                }
                 Set-TreePriority -Device $dev -PriorityValue $targetPriorityVal -PriorityName $targetPriorityName -Indent "        "
             } else {
                 if ($dev.Class -eq 'Audio' -and $hdaudbusActive) {
@@ -926,7 +931,7 @@ do {
                     $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
                     Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
 
-                    $tag = if ($dev.Class -eq 'Net') { "[NET-WDF]" } elseif ($dev.Class -eq 'Audio') { "[AUDIO]" } elseif ($dev.Class -eq 'USB') { "[USB]" } elseif ($dev.Class -eq 'Display') { "[iGPU]" } else { "[DEV]" }
+                    $tag = if ($dev.Class -eq 'Net') { "[NET-WDF]" } elseif ($dev.Class -eq 'Audio') { "[AUDIO]" } elseif ($dev.Class -eq 'USB') { "[USB]" } else { "[DEV]" }
                     Write-Host "$tag  $($dev.Name)" -ForegroundColor Yellow
                     Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Physical P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Yellow
                 }
