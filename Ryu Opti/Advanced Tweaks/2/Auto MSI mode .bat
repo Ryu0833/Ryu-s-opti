@@ -208,20 +208,21 @@ function Get-MsiEnableColor ([PSCustomObject]$Device) {
     return 'White'
 }
 
-# Helper Function: Synchronize PCIe Tree Ports Priority to Match Device Priority
-function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string]$PriorityName, [string]$Indent = "   ") {
-    # Skip setting PCIe tree priority if the device class is Audio
+# Helper Function: Synchronize PCIe Tree Ports Priority and Policy
+function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string]$PriorityName, [int]$PolicyValue = -1, [string]$Indent = "   ") {
     if ($Device.Class -eq 'Audio') { return }
 
     if ($Device.TreePorts -and $Device.TreePorts.Count -gt 0) {
         foreach ($port in $Device.TreePorts) {
+            if (-not (Test-Path $port.RegPrioPath)) { New-Item -Path $port.RegPrioPath -Force | Out-Null }
+            
+            # 1. Handle Priority
             if ($PriorityValue -eq 0) {
                 if (Test-Path $port.RegPrioPath) {
                     Remove-ItemProperty -Path $port.RegPrioPath -Name "DevicePriority" -ErrorAction SilentlyContinue
                 }
                 Write-Host "$Indent-> PCIe Tree Priority: $($port.Name) -> Undefined (Default)" -ForegroundColor DarkGray
-            } else {
-                if (-not (Test-Path $port.RegPrioPath)) { New-Item -Path $port.RegPrioPath -Force | Out-Null }
+            } elseif ($PriorityValue -gt 0) {
                 Set-ItemProperty -Path $port.RegPrioPath -Name "DevicePriority" -Value $PriorityValue -Type DWord -Force
                 Write-Host "$Indent-> PCIe Tree Priority: $($port.Name) -> $PriorityName Priority" -ForegroundColor DarkCyan
             }
@@ -701,6 +702,8 @@ do {
                 foreach ($port in $dev.TreePorts) {
                     if (Test-Path $port.RegPrioPath) {
                         Remove-ItemProperty -Path $port.RegPrioPath -Name "DevicePriority" -ErrorAction SilentlyContinue
+                        Remove-ItemProperty -Path $port.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
+                        Remove-ItemProperty -Path $port.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
                         if ((Get-Item $port.RegPrioPath).PropertyCount -eq 0) {
                             Remove-Item -Path $port.RegPrioPath -Force -ErrorAction SilentlyContinue
                         }
@@ -719,7 +722,7 @@ do {
         continue
     }
 
-# OPTION C: RE-CHECK DEVICES
+    # OPTION C: RE-CHECK DEVICES
     if ($selection -eq 'C' -or $selection -eq 'c') {
         Clear-Host
         Write-Host "==================================================================================" -ForegroundColor Cyan
@@ -747,8 +750,17 @@ do {
         $allEligiblePCores = @($cpu.PCores | Where-Object { $_.PhysicalCoreIndex -ne 0 } | Sort-Object PhysicalCoreIndex -Descending)
         $coreZeroMsg = "Core 0 EXCLUDED"
 
-        $displayDevs = @($devList | Where-Object { $_.Class -eq 'Display' })
+        # Regex definition to accurately capture Integrated GPUs and Basic fallback adapters
+        $igpuRegex = '(?i)(Intel.*(UHD|HD|Iris).*Graphics|^Intel\(R\) Graphics|AMD Radeon(?:\(TM\))?\s*Graphics|AMD Radeon.*Vega.*Graphics|Basic Display Adapter)'
+
+        $displayDevs = @($devList | Where-Object { $_.Class -eq 'Display' -and $_.Name -notmatch $igpuRegex })
+        $igpuDevs    = @($devList | Where-Object { $_.Class -eq 'Display' -and $_.Name -match $igpuRegex })
         $otherDevs   = @($devList | Where-Object { $_.Class -ne 'Display' })
+
+        # Pool Integrated GPUs alongside other shared devices (Networking, Audio, etc.) instead of isolating them
+        if ($igpuDevs.Count -gt 0) {
+            $otherDevs += $igpuDevs
+        }
 
         $availablePCoreList = [System.Collections.Generic.List[PSObject]]::new()
         foreach ($c in $allEligiblePCores) { $availablePCoreList.Add($c) }
@@ -760,7 +772,9 @@ do {
                 $availablePCoreList.RemoveAt(0)
                 $displayAssignedCores[$dDev.PNPID] = $assignedCore
             } else {
-                $displayAssignedCores[$dDev.PNPID] = $allEligiblePCores[0]
+                if ($allEligiblePCores.Count -gt 0) {
+                    $displayAssignedCores[$dDev.PNPID] = $allEligiblePCores[0]
+                }
             }
         }
 
@@ -769,7 +783,18 @@ do {
         Write-Host "Detected SMT State: $smtStr" -ForegroundColor Gray
         Write-Host "Architecture     : $archStr" -ForegroundColor Gray
         Write-Host "Eligible P-Cores : Physical Cores ($($allEligiblePCores.PhysicalCoreIndex -join ', ')) [$coreZeroMsg]" -ForegroundColor Gray
-        Write-Host "Display Core Reserved: Physical Core ($(($displayAssignedCores.Values.PhysicalCoreIndex | Select-Object -Unique) -join ', ')) [ISOLATED]" -ForegroundColor Green
+        
+        $uniqueGPUCores = ($displayAssignedCores.Values.PhysicalCoreIndex | Select-Object -Unique) -join ', '
+        if ($uniqueGPUCores) {
+            Write-Host "Discrete GPU Reserved: Physical Core ($uniqueGPUCores) [ISOLATED]" -ForegroundColor Green
+        } else {
+            Write-Host "Discrete GPU Reserved: NONE (No Discrete GPU or eligible cores detected)" -ForegroundColor DarkGray
+        }
+
+        if ($igpuDevs.Count -gt 0) {
+            Write-Host "Integrated GPU(s) Detected: Re-routed to shared pool (No Core Isolation)" -ForegroundColor Magenta
+        }
+
         Write-Host "Other Core Pool      : Physical Cores ($($nonDisplayCorePool.PhysicalCoreIndex -join ', '))" -ForegroundColor Yellow
         Write-Host ""
 
@@ -793,16 +818,21 @@ do {
             Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePriority" -Value 3 -Type DWord -Force
 
             $targetCoreObj = $displayAssignedCores[$dev.PNPID]
-            $targetPhysIdx = $targetCoreObj.PhysicalCoreIndex
-            $targetLogCore = $targetCoreObj.PrimaryLogicalCore
+            if ($null -ne $targetCoreObj) {
+                $targetPhysIdx = $targetCoreObj.PhysicalCoreIndex
+                $targetLogCore = $targetCoreObj.PrimaryLogicalCore
 
-            Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
-            $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
-            Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
+                Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
+                $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
+                Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
 
-            Write-Host "[GPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
-            Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Green
-            Set-TreePriority -Device $dev -PriorityValue 3 -PriorityName "High" -Indent "        "
+                Write-Host "[dGPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
+                Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Green
+            } else {
+                Write-Host "[dGPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
+                Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core N/A" -ForegroundColor DarkGray
+            }
+            Set-TreePriority -Device $dev -PriorityValue 3 -PriorityName "High" -PolicyValue 3 -Indent "        "
             Write-Host ""
         }
 
@@ -815,7 +845,8 @@ do {
         }
 
         $sortedOtherDevs = $otherDevs | Sort-Object {
-            if ($_.Class -eq 'USB') { 1 }
+            if ($_.Class -eq 'Display') { 0 }
+            elseif ($_.Class -eq 'USB') { 1 }
             elseif ($_.Class -eq 'Net') { 2 }
             elseif ($_.Class -eq 'Audio') { 3 }
             else { 4 }
@@ -887,16 +918,18 @@ do {
                     if ($otherPointer -ge $nonDisplayCorePool.Count) { $otherPointer = 0 }
                 }
 
-                $targetPhysIdx = $targetCoreObj.PhysicalCoreIndex
-                $targetLogCore = $targetCoreObj.PrimaryLogicalCore
+                if ($null -ne $targetCoreObj) {
+                    $targetPhysIdx = $targetCoreObj.PhysicalCoreIndex
+                    $targetLogCore = $targetCoreObj.PrimaryLogicalCore
 
-                Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
-                $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
-                Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
+                    Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
+                    $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
+                    Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
 
-                $tag = if ($dev.Class -eq 'Net') { "[NET-WDF]" } elseif ($dev.Class -eq 'Audio') { "[AUDIO]" } elseif ($dev.Class -eq 'USB') { "[USB]" } else { "[DEV]" }
-                Write-Host "$tag  $($dev.Name)" -ForegroundColor Yellow
-                Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Physical P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Yellow
+                    $tag = if ($dev.Class -eq 'Net') { "[NET-WDF]" } elseif ($dev.Class -eq 'Audio') { "[AUDIO]" } elseif ($dev.Class -eq 'USB') { "[USB]" } elseif ($dev.Class -eq 'Display') { "[iGPU]" } else { "[DEV]" }
+                    Write-Host "$tag  $($dev.Name)" -ForegroundColor Yellow
+                    Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Physical P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Yellow
+                }
                 
                 Set-TreePriority -Device $dev -PriorityValue $targetPriorityVal -PriorityName $targetPriorityName -Indent "        "
             }
@@ -996,7 +1029,7 @@ do {
                 $prioChoice = Read-Host "Choice [1-4 or ENTER]"
 
                 if ($prioChoice -in @('1','2','3','4')) {
-                    if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path $dev.RegPrioPath -Force | Out-Null }
+                    if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path$dev.RegPrioPath -Force | Out-Null }
                     $targetPrioVal = switch ($prioChoice) { '1'{3} '2'{2} '3'{1} '4'{0} }
                     $targetPrioName = switch ($prioChoice) { '1'{"High"} '2'{"Normal"} '3'{"Low"} '4'{"Undefined"} }
                     Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePriority" -Value $targetPrioVal -Type DWord -Force
@@ -1059,19 +1092,17 @@ do {
     # MANUAL DEVICE SELECTION
     if ($selection -match '^\d+$') {
         $idx = [int]$selection - 1
-        if ($idx -ge 0 -and $idx -lt $devList.Count) {
-            $targetDev = $devList[$idx]
+        if ($idx -ge 0 -and$idx -lt $devList.Count) {$targetDev = $devList[$idx]
             
             Clear-Host
             Write-Host "==================================================================================" -ForegroundColor Cyan
             Write-Host " CONFIGURE DEVICE: $($targetDev.Name)" -ForegroundColor Yellow
-            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType))" } else { $targetDev.Class }
-            $infStatus = if ($null -ne $targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
-            Write-Host " Class: $classInfo | PNP ID: $($targetDev.PNPID) | INF: $($targetDev.InfName) ($infStatus)" -ForegroundColor Gray
+            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType))" } else { $targetDev.Class }$infStatus = if ($null -ne$targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
+            Write-Host " Class: $classInfo \vert{} PNP ID:$($targetDev.PNPID) \vert{} INF:$($targetDev.InfName) ($infStatus)" -ForegroundColor Gray
             Write-Host " Current MSI: $($targetDev.MSIMode) | Priority: $($targetDev.Priority) | Core: $($targetDev.Core)" -ForegroundColor Gray
             Write-Host "==================================================================================" -ForegroundColor Cyan
 
-            $changed = $false
+            $changed =$false
 
             Write-Host "`n[0/4] Reset Option:" -ForegroundColor White
             Write-Host "   R. Reset Device to System Default (INF-based MSI, Clear Priority, and Core Affinity)"
@@ -1102,33 +1133,33 @@ do {
                 $changed = $true
             } else {
                 Write-Host "`n[1/3] MSI Mode Selection:" -ForegroundColor White
-                if (-not $targetDev.HwMsiSupport -and $targetDev.InfMsiValue -ne 1) {
+                if (-not $targetDev.HwMsiSupport -and$targetDev.InfMsiValue -ne 1) {
                     Write-Host "   [!] WARNING: Hardware/INF indicates it only supports legacy Line-Based Interrupts." -ForegroundColor Red
                 }
-                if ($targetDev.IrqConflict -and $targetDev.HwMsiSupport) {
+                if ($targetDev.IrqConflict -and$targetDev.HwMsiSupport) {
                     Write-Host "   [!] RECOMMENDED: This device has an IRQ Conflict. Enabling MSI Mode will resolve it." -ForegroundColor Green
                 }
-                $msiEnableColor = Get-MsiEnableColor -Device $targetDev
+                $msiEnableColor = Get-MsiEnableColor -Device$targetDev
                 Write-Host "   1. Enable MSI Mode (MSISupported = 1)" -ForegroundColor $msiEnableColor
                 Write-Host "   2. Disable MSI Mode (MSISupported = 0)"
                 Write-Host "   [ENTER] Keep Current ($($targetDev.MSIMode))"
                 $msiChoice = Read-Host "Choice [1, 2, or ENTER]"
 
                 if ($msiChoice -eq '1') {
-                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path $targetDev.RegMSIPath -Force | Out-Null }
+                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path$targetDev.RegMSIPath -Force | Out-Null }
                     Set-ItemProperty -Path $targetDev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
                     Write-Host "   -> Set MSI Mode to ENABLED" -ForegroundColor Green
-                    $changed = $true
+                    $changed =$true
                 } elseif ($msiChoice -eq '2') {
-                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path $targetDev.RegMSIPath -Force | Out-Null }
+                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path$targetDev.RegMSIPath -Force | Out-Null }
                     Set-ItemProperty -Path $targetDev.RegMSIPath -Name "MSISupported" -Value 0 -Type DWord -Force
                     Write-Host "   -> Set MSI Mode to DISABLED" -ForegroundColor Yellow
-                    $changed = $true
+                    $changed =$true
                 } else {
                     Write-Host "   -> Kept current MSI mode" -ForegroundColor Gray
                 }
 
-                $targetPrioName = $targetDev.Priority
+                $targetPrioName =$targetDev.Priority
                 $targetPrioVal = switch ($targetDev.Priority) { 'High'{3} 'Normal'{2} 'Low'{1} 'Undefined'{0} default{0} }
 
                 Write-Host "`n[2/3] Priority Selection:" -ForegroundColor White
@@ -1151,7 +1182,7 @@ do {
                 }
 
                 Write-Host "`n[3/3] CPU Core Affinity Selection:" -ForegroundColor White
-                if ($targetDev.Class -eq 'Net' -and $targetDev.DriverType -eq 'NDIS') {
+                if ($targetDev.Class -eq 'Net' -and$targetDev.DriverType -eq 'NDIS') {
                     Write-Host "   [!] NDIS Network Driver Detected: Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
                     if (Test-Path $targetDev.RegPrioPath) {
                         Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
@@ -1159,7 +1190,7 @@ do {
                     }
                     Write-Host "   -> Core Affinity locked to System Default" -ForegroundColor Gray
                 } else {
-                    if ($targetDev.Class -eq 'Net' -and $targetDev.DriverType -eq 'WDF') {
+                    if ($targetDev.Class -eq 'Net' -and$targetDev.DriverType -eq 'WDF') {
                         Write-Host "   [i] WDF Network Driver Detected: Custom Core Selection AVAILABLE." -ForegroundColor Green
                     }
                     Write-Host "   Available P-Cores Primary Logical IDs: ($(($cpu.PCores.PrimaryLogicalCore) -join ', '))" -ForegroundColor Gray
@@ -1174,15 +1205,15 @@ do {
                             Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
                         }
                         Write-Host "   -> Reset Core Affinity to System Default" -ForegroundColor Yellow
-                        $changed = $true
+                        $changed =$true
                     } elseif ($coreChoice -match '^\d+$' -and [int]$coreChoice -ge 1 -and [int]$coreChoice -lt 64) {
                         $cNum = [int]$coreChoice
-                        if (-not (Test-Path $targetDev.RegPrioPath)) { New-Item -Path $targetDev.RegPrioPath -Force | Out-Null }
+                        if (-not (Test-Path $targetDev.RegPrioPath)) { New-Item -Path$targetDev.RegPrioPath -Force | Out-Null }
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
-                        $cBytes = Get-AssignmentSetBytes -coreNum $cNum
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force
+                        $cBytes = Get-AssignmentSetBytes -coreNum$cNum
                         Write-Host "   -> Locked device to Logical Core $cNum" -ForegroundColor Green
-                        $changed = $true
+                        $changed =$true
                     } else {
                         Write-Host "   -> Kept current Core Affinity" -ForegroundColor Gray
                     }
