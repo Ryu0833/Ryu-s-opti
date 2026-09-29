@@ -18,13 +18,13 @@ $scripts = @(
         FileName = "Ryu power.bat" 
     },
     @{ 
-        Name     = "Opti(PC restart)"
+        Name     = "Opti(PC restart\System restore)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/2"
         FileName = "opti.bat" 
     },
     @{ 
-        Name     = "Shader Cache Cleanup"
+        Name     = "Shader Cache Cleanup(Safe mode)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/3"
         FileName = "clearshader.bat" 
@@ -38,7 +38,7 @@ $scripts = @(
         ExeName  = "SetTimerResolution.exe"
     },
     @{ 
-        Name     = "Auto MSI mode(PC restart)"
+        Name     = "Auto MSI mode(PC restart\E-core Disable)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/Advanced Tweaks/2"
         FileName = "Auto MSI mode .bat" 
