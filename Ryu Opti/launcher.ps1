@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version   = "1.0.0"
+$version    = "1.0.0"
 
 #  options 
 $scripts = @(
@@ -16,7 +16,7 @@ $scripts = @(
         Name     = "Ryu Power"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/1"
-        #FileName = "Ryu power.bat" 
+        #FileName = "Ryu power.bat"
         FileName = "Ryu power.ps1" 
     },
     @{ 
@@ -81,29 +81,28 @@ while ($true) {
                 $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
                 
                 Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan
+                $tempFile = "$env:TEMP\temp_launch_$($index).bat"
                 
-                # CHANGED LOGIC: Detect if the file is a .bat or .ps1
-                $ext = [System.IO.Path]::GetExtension($selected.FileName)$tempFile = "$env:TEMP\temp_launch_$($index)$ext"
-                
-                Invoke-WebRequest -Uri $url -OutFile$tempFile
-                
-                # CHANGED LOGIC: Run PowerShell for .ps1 and CMD for .bat
+                Invoke-WebRequest -Uri $url -OutFile $tempFile
                 if ($ext -eq ".ps1") {
                     Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
                 } else {
                     Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait
                 }
                 
-                if (Test-Path $tempFile) { Remove-Item$tempFile -Force }
+                if (Test-Path $tempFile) { Remove-Item $tempFile -Force }
             }
             elseif ($selected.Type -eq "RepoWithExe") {
                 # Create a dedicated temporary working directory so both the script and EXE live together
                 $workDir = "$env:TEMP\RyuScript3_Work"
-                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path$workDir | Out-Null }
+                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir | Out-Null }
                 
                 # 1. Download the batch script from GitHub repo folder
-                $pathParts = $selected.Folder -split '/'$encodedParts = foreach ($part in$pathParts) { [System.Uri]::EscapeDataString($part) }$encodedPath = $encodedParts -join '/'$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
+                $pathParts = $selected.Folder -split '/'
+                $encodedParts = foreach ($part in $pathParts) { [System.Uri]::EscapeDataString($part) }
+                $encodedPath = $encodedParts -join '/'
                 
+                $scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
                 $localScript = "$workDir\$($selected.FileName)"
                 
                 Write-Host "`nDownloading script from GitHub repository..." -ForegroundColor Cyan
