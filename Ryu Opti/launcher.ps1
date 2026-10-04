@@ -17,7 +17,7 @@ $scripts = @(
         Type     = "RepoScript"
         Folder   = "Ryu Opti/1"
         FileName = "Ryu power.bat"
-        ExeUrl   = "https://github.com/Ryu0833/Ryu-s-opti/blob/main/Ryu%20Opti/1/Ryu%20power.ps1"
+        ExeUrl   = "https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/master/Ryu%20Opti/1/Ryu%20power.ps1"
         ExeName  = "Ryu power.ps1" 
     },
     @{ 
