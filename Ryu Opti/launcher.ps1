@@ -16,8 +16,8 @@ $scripts = @(
         Name     = "Ryu Power"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/1"
-        #FileName = "Ryu power.bat" # CHANGED: Now points to your .ps1 file
-        FileName = "Ryu power.ps1" # CHANGED: Now points to your .ps1 file
+        #FileName = "Ryu power.bat" 
+        FileName = "Ryu power.ps1" 
     },
     @{ 
         Name     = "Opti(PC restart\System restore)"
@@ -103,6 +103,7 @@ while ($true) {
                 
                 # 1. Download the batch script from GitHub repo folder
                 $pathParts = $selected.Folder -split '/'$encodedParts = foreach ($part in$pathParts) { [System.Uri]::EscapeDataString($part) }$encodedPath = $encodedParts -join '/'$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
+                
                 $localScript = "$workDir\$($selected.FileName)"
                 
                 Write-Host "`nDownloading script from GitHub repository..." -ForegroundColor Cyan
