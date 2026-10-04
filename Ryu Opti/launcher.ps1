@@ -14,11 +14,11 @@ $version    = "1.0.0"
 $scripts = @(
     @{ 
         Name     = "Ryu Power"
-        Type     = "RepoScript"
+        #Type     = "RepoScript"
+        Type     = "RepoScriptps1"
         Folder   = "Ryu Opti/1"
-        FileName = "Ryu power.bat"
-        ExeUrl   = "https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/master/Ryu%20Opti/1/Ryu%20power.ps1"
-        ExeName  = "Ryu power.ps1" 
+        #FileName = "Ryu power.bat"
+        FileName = "Ryu power.ps1" 
     },
     @{ 
         Name     = "Opti(PC restart\System restore)"
@@ -86,6 +86,21 @@ while ($true) {
                 
                 Invoke-WebRequest -Uri $url -OutFile $tempFile
                 Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait
+                
+                if (Test-Path $tempFile) { Remove-Item $tempFile -Force }
+            }
+            elseif ($selected.Type -eq "RepoScriptps1") {
+               $pathParts = $selected.Folder -split '/'
+                $encodedParts = foreach ($part in $pathParts) { [System.Uri]::EscapeDataString($part) }
+                $encodedPath = $encodedParts -join '/'
+                
+                $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
+                
+                Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan
+                $tempFile = "$env:TEMP\temp_launch_$($index).bat"
+                
+                Invoke-WebRequest -Uri $url -OutFile $tempFile
+                Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
                 
                 if (Test-Path $tempFile) { Remove-Item $tempFile -Force }
             }
