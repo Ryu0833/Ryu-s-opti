@@ -8,6 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
+$version    = "1.0.0"
 
 #  options 
 $scripts = @(
@@ -47,9 +48,9 @@ $scripts = @(
 
 while ($true) {
     Clear-Host
-    Write-Host "================================" -ForegroundColor Cyan
-    Write-Host "   Launcher Ryu Tweaks          " -ForegroundColor Green
-    Write-Host "================================" -ForegroundColor Cyan
+    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host "      Launcher Ryu Tweaks $version       " -ForegroundColor Green
+    Write-Host "=========================================" -ForegroundColor Cyan
     
     for ($i = 0; $i -lt $scripts.Count; $i++) {
         Write-Host "$($i + 1). $($scripts[$i].Name)"

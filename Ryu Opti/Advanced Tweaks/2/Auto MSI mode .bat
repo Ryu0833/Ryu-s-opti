@@ -754,9 +754,15 @@ do {
         $displayDevs = @($devList | Where-Object { $_.Class -eq 'Display' })
         $igpuDevs    = @($devList | Where-Object { $_.Class -eq 'iGPU' })
         $otherDevs   = @($devList | Where-Object { $_.Class -ne 'Display' -and $_.Class -ne 'iGPU' })
+        $igpuIsolated = $false
 
-        # Pool Integrated GPUs alongside other shared devices (Networking, Audio, etc.) instead of isolating them
-        if ($igpuDevs.Count -gt 0) {
+        if ($displayDevs.Count -eq 0 -and $igpuDevs.Count -gt 0) {
+            # No dGPU found: Elevate iGPU to use isolated core logic
+            $displayDevs = $igpuDevs
+            $igpuDevs = @() # Clear so it doesn't get pooled
+            $igpuIsolated = $true
+        } elseif ($igpuDevs.Count -gt 0) {
+            # dGPU is present: Send iGPU to shared pool (where it gets 'Default' core)
             $otherDevs += $igpuDevs
         }
 
@@ -784,13 +790,17 @@ do {
         
         $uniqueGPUCores = ($displayAssignedCores.Values.PhysicalCoreIndex | Select-Object -Unique) -join ', '
         if ($uniqueGPUCores) {
-            Write-Host "Discrete GPU Reserved: Physical Core ($uniqueGPUCores) [ISOLATED]" -ForegroundColor Green
+            if ($igpuIsolated) {
+                Write-Host "Integrated GPU Reserved: Physical Core ($uniqueGPUCores) [ISOLATED]" -ForegroundColor Green
+            } else {
+                Write-Host "Discrete GPU Reserved: Physical Core ($uniqueGPUCores) [ISOLATED]" -ForegroundColor Green
+            }
         } else {
-            Write-Host "Discrete GPU Reserved: NONE (No Discrete GPU or eligible cores detected)" -ForegroundColor DarkGray
+            Write-Host "GPU Reserved: NONE (No GPU or eligible cores detected)" -ForegroundColor DarkGray
         }
 
         if ($igpuDevs.Count -gt 0) {
-            Write-Host "Integrated GPU(s) Detected: Re-routed to shared pool (No Core Isolation)" -ForegroundColor Magenta
+            Write-Host "Integrated GPU(s) Detected (dGPU active): Re-routed to shared pool (No Core Isolation)" -ForegroundColor Magenta
         }
 
         Write-Host "Other Core Pool      : Physical Cores ($($nonDisplayCorePool.PhysicalCoreIndex -join ', '))" -ForegroundColor Yellow
@@ -815,6 +825,7 @@ do {
             if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path $dev.RegPrioPath -Force | Out-Null }
             Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePriority" -Value 3 -Type DWord -Force
 
+            $gpuTag = if ($dev.Class -eq 'iGPU') { "[iGPU-DISPLAY]" } else { "[dGPU-DISPLAY]" }
             $targetCoreObj = $displayAssignedCores[$dev.PNPID]
             if ($null -ne $targetCoreObj) {
                 $targetPhysIdx = $targetCoreObj.PhysicalCoreIndex
@@ -827,7 +838,7 @@ do {
                 Write-Host "[dGPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
                 Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Green
             } else {
-                Write-Host "[dGPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
+                Write-Host "$gpuTag $($dev.Name)" -ForegroundColor Green
                 Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core N/A" -ForegroundColor DarkGray
             }
             Set-TreePriority -Device $dev -PriorityValue 3 -PriorityName "High" -PolicyValue 3 -Indent "        "
@@ -975,9 +986,9 @@ do {
             Write-Host "   [ENTER] Proceed with configuration"
             $resetChoice = Read-Host "Choice [R or ENTER]"
 
-            if ($resetChoice -eq 'R' -or $resetChoice -eq 'r') {
-                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
-                if ($null -ne $dev.InfMsiValue) {
+            if ($resetChoice -eq 'R' -or$resetChoice -eq 'r') {
+                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path$dev.RegMSIPath -Force | Out-Null }
+                if ($null -ne$dev.InfMsiValue) {
                     Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value $dev.InfMsiValue -Type DWord -Force
                     $statusMsg = if ($dev.InfMsiValue -eq 1) { "ENABLED" } else { "DISABLED" }
                     Write-Host "   -> MSI Mode updated from INF: $statusMsg" -ForegroundColor Gray
@@ -1043,6 +1054,7 @@ do {
                     Write-Host "   -> Kept current Priority ($targetPrioName)" -ForegroundColor Gray
                 }
 
+                $treePolicyValue = -1
                 Write-Host "`n[3/3] CPU Core Affinity Selection:" -ForegroundColor White
                 if ($dev.Class -eq 'Net' -and $dev.DriverType -eq 'NDIS') {
                     Write-Host "   [!] NDIS Network Driver Detected: Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
@@ -1066,6 +1078,7 @@ do {
                             Remove-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
                             Remove-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
                         }
+                        $treePolicyValue = 0
                         Write-Host "   -> Reset Core Affinity to System Default" -ForegroundColor Yellow
                     } elseif ($coreChoice -match '^\d+$' -and [int]$coreChoice -ge 1 -and [int]$coreChoice -lt 64) {
                         $cNum = [int]$coreChoice
@@ -1073,8 +1086,10 @@ do {
                         Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
                         $cBytes = Get-AssignmentSetBytes -coreNum $cNum
                         Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force
+                        $treePolicyValue = 3
                         Write-Host "   -> Locked device to Logical Core $cNum" -ForegroundColor Green
                     } else {
+                        $treePolicyValue = -1
                         Write-Host "   -> Kept current Core Affinity" -ForegroundColor Gray
                     }
                 }
@@ -1186,6 +1201,7 @@ do {
                     Write-Host "   -> Kept current Priority ($targetPrioName)" -ForegroundColor Gray
                 }
 
+                $treePolicyValue = -1
                 Write-Host "`n[3/3] CPU Core Affinity Selection:" -ForegroundColor White
                 if ($targetDev.Class -eq 'Net' -and$targetDev.DriverType -eq 'NDIS') {
                     Write-Host "   [!] NDIS Network Driver Detected: Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
@@ -1209,6 +1225,7 @@ do {
                             Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
                             Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
                         }
+                        $treePolicyValue = 0
                         Write-Host "   -> Reset Core Affinity to System Default" -ForegroundColor Yellow
                         $changed =$true
                     } elseif ($coreChoice -match '^\d+$' -and [int]$coreChoice -ge 1 -and [int]$coreChoice -lt 64) {
@@ -1217,9 +1234,11 @@ do {
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force
                         $cBytes = Get-AssignmentSetBytes -coreNum$cNum
+                        Set-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force$treePolicyValue = 3
                         Write-Host "   -> Locked device to Logical Core $cNum" -ForegroundColor Green
                         $changed =$true
                     } else {
+                        $treePolicyValue = -1
                         Write-Host "   -> Kept current Core Affinity" -ForegroundColor Gray
                     }
                 }
