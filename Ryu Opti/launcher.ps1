@@ -97,7 +97,7 @@ while ($true) {
                 $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
                 
                 Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan
-                $tempFile = "$env:TEMP\temp_launch_$($index).bat"
+                $tempFile = "$env:TEMP\temp_launch_$($index).ps1"
                 
                 Invoke-WebRequest -Uri $url -OutFile $tempFile
                 Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
