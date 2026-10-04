@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version    = "1.0.0"
+$version   = "1.0.0"
 
 #  options 
 $scripts = @(
@@ -81,35 +81,40 @@ while ($true) {
                 $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
                 
                 Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan
-                
-                $ext = [System.IO.Path]::GetExtension($selected.FileName)$tempFile = "$env:TEMP\temp_launch_$($index)$ext"
+                $tempFile = "$env:TEMP\temp_launch_$($index).bat"
                 
                 Invoke-WebRequest -Uri $url -OutFile$tempFile
-                
-                if ($ext -eq ".ps1") {
-                    Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tempFile`"" -Wait
-                } else {
-                    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait
-                }
+                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait
                 
                 if (Test-Path $tempFile) { Remove-Item$tempFile -Force }
             }
-            elseif ($selected.Type -eq "RepoWithExe") {
+            elseif ($selected.Type -in @("RepoWithExe", "RepoWithcmd", "RepoWithps1")) {
+                # Create a dedicated temporary working directory so both the script and EXE/CMD/PS1 live together
                 $workDir = "$env:TEMP\RyuScript3_Work"
-                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir \vert{} Out-Null }$pathParts = $selected.Folder -split '/'$encodedParts = foreach ($part in$pathParts) { [System.Uri]::EscapeDataString($part) }$encodedPath = $encodedParts -join '/'$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
+                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path$workDir | Out-Null }
                 
+                # 1. Download the script from GitHub repo folder
+                $pathParts = $selected.Folder -split '/'$encodedParts = foreach ($part in$pathParts) { [System.Uri]::EscapeDataString($part) }$encodedPath = $encodedParts -join '/'$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
                 $localScript = "$workDir\$($selected.FileName)"
                 
                 Write-Host "`nDownloading script from GitHub repository..." -ForegroundColor Cyan
                 Invoke-WebRequest -Uri $scriptUrl -OutFile $localScript
                 
+                # 2. Download the external file into the exact same folder
                 $localExe = "$workDir\$($selected.ExeName)"
-                Write-Host "Downloading SetTimerResolution.exe into the same folder..." -ForegroundColor Cyan
+                Write-Host "Downloading $($selected.ExeName) into the same folder..." -ForegroundColor Cyan
                 Invoke-WebRequest -Uri $selected.ExeUrl -OutFile $localExe
                 
+                # 3. Execute the script inside that working directory as Admin based on Type
                 Write-Host "Executing script with required files as Admin..." -ForegroundColor Cyan
-                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$localScript`"" -WorkingDirectory $workDir -Wait
                 
+                if ($selected.Type -eq "RepoWithps1") {
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$localScript`"" -WorkingDirectory $workDir -Wait
+                } else {
+                    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$localScript`"" -WorkingDirectory $workDir -Wait
+                }
+                
+                # 4. Clean up the working directory after execution
                 if (Test-Path $workDir) { Remove-Item $workDir -Recurse -Force }
             }
         } catch {
@@ -119,7 +124,7 @@ while ($true) {
         Write-Host "`nPress Enter to return to the menu..."
         [void](Read-Host)
     } else {
-        Write-Host "Invalid selection. Please enter a number of script." -ForegroundColor Red
+        Write-Host "Invalid selection. Please enter a number of scripte ." -ForegroundColor Red
         Start-Sleep -Seconds 1
     }
 }
