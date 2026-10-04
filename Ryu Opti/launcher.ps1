@@ -1,130 +1,131 @@
 # Automatically check and relaunch as Administrator if not already elevated
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Start-Process PowerShell -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit
+    Start-Process PowerShell -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs;
+    exit;
 }
 
 # GitHub Repository 
-$repoOwner = "Ryu0833"
-$repoName  = "Ryu-s-opti"
-$branch    = "master"
-$version   = "1.0.0"
+$repoOwner = "Ryu0833";
+$repoName  = "Ryu-s-opti";
+$branch    = "master";
+$version   = "1.0.0";
 
-#  options 
+# options 
 $scripts = @(
     @{ 
-        Name     = "Ryu Power"
-        Type     = "RepoScript"
-        Folder   = "Ryu Opti/1"
-        #FileName = "Ryu power.bat"
-        FileName = "Ryu power.ps1" 
+        Name     = "Ryu Power";
+        Type     = "RepoScript";
+        Folder   = "Ryu Opti/1";
+        #FileName = "Ryu power.bat";
+        FileName = "Ryu power.ps1";
     },
     @{ 
-        Name     = "Opti(PC restart\System restore)"
-        Type     = "RepoScript"
-        Folder   = "Ryu Opti/2"
-        FileName = "opti.bat" 
+        Name     = "Opti(PC restart\System restore)";
+        Type     = "RepoScript";
+        Folder   = "Ryu Opti/2";
+        FileName = "opti.bat";
     },
     @{ 
-        Name     = "Shader Cache Cleanup(Safe mode)"
-        Type     = "RepoScript"
-        Folder   = "Ryu Opti/3"
-        FileName = "clearshader.bat" 
+        Name     = "Shader Cache Cleanup(Safe mode)";
+        Type     = "RepoScript";
+        Folder   = "Ryu Opti/3";
+        FileName = "clearshader.bat";
     },
     @{ 
-        Name     = "Timer Resolution Script(Windows 11 only\PC restart)"
-        Type     = "RepoWithExe"
-        Folder   = "Ryu Opti/Advanced Tweaks/1"
-        FileName = "timer00.bat" 
-        ExeUrl   = "https://github.com/valleyofdoom/TimerResolution/releases/download/SetTimerResolution-v1.0.0/SetTimerResolution.exe"
-        ExeName  = "SetTimerResolution.exe"
+        Name     = "Timer Resolution Script(Windows 11 only\PC restart)";
+        Type     = "RepoWithExe";
+        Folder   = "Ryu Opti/Advanced Tweaks/1";
+        FileName = "timer00.bat"; 
+        ExeUrl   = "https://github.com/valleyofdoom/TimerResolution/releases/download/SetTimerResolution-v1.0.0/SetTimerResolution.exe";
+        ExeName  = "SetTimerResolution.exe";
     },
     @{ 
-        Name     = "Auto MSI mode(PC restart\E-core Disable)"
-        Type     = "RepoScript"
-        Folder   = "Ryu Opti/Advanced Tweaks/2"
-        FileName = "Auto MSI mode .bat" 
+        Name     = "Auto MSI mode(PC restart\E-core Disable)";
+        Type     = "RepoScript";
+        Folder   = "Ryu Opti/Advanced Tweaks/2";
+        FileName = "Auto MSI mode .bat";
     }
-)
+);
 
 while ($true) {
-    Clear-Host
-    Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "       Launcher Ryu Tweaks 1.0.0         " -ForegroundColor Green
-    Write-Host "=========================================" -ForegroundColor Cyan
+    Clear-Host;
+    Write-Host "=========================================" -ForegroundColor Cyan;
+    Write-Host "       Launcher Ryu Tweaks 1.0.0         " -ForegroundColor Green;
+    Write-Host "=========================================" -ForegroundColor Cyan;
     
     for ($i = 0; $i -lt $scripts.Count; $i++) {
-        Write-Host "$($i + 1). $($scripts[$i].Name)"
+        Write-Host "$($i + 1). $($scripts[$i].Name)";
     }
-    Write-Host "0. Exit" -ForegroundColor Yellow
-    Write-Host "--------------------------------" -ForegroundColor Cyan
+    Write-Host "0. Exit" -ForegroundColor Yellow;
+    Write-Host "--------------------------------" -ForegroundColor Cyan;
     
-    $choice = Read-Host "Select a number script to run "
+    $choice = Read-Host "Select a number script to run ";
     
     if ($choice -eq '0') {
-        Write-Host "Exiting launcher." -ForegroundColor Green
-        [void](Read-Host)
-        Clear-Host
-        break
+        Write-Host "Exiting launcher." -ForegroundColor Green;
+        [void](Read-Host);
+        Clear-Host;
+        break;
     }
 
-    $index = [int]$choice - 1
+    $index = [int]$choice - 1;
     if ($index -ge 0 -and $index -lt $scripts.Count) {
-        $selected = $scripts[$index]
+        $selected = $scripts[$index];
         
         try {
             if ($selected.Type -eq "RepoScript") {
-                $pathParts = $selected.Folder -split '/'
-                $encodedParts = foreach ($part in $pathParts) { [System.Uri]::EscapeDataString($part) }
-                $encodedPath = $encodedParts -join '/'
+                $pathParts = $selected.Folder -split '/';
+                $encodedParts = $pathParts | ForEach-Object { [System.Uri]::EscapeDataString($_) };
+                $encodedPath = $encodedParts -join '/';
                 
-                $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
+                $url = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)";
                 
-                Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan
-                $tempFile = "$env:TEMP\temp_launch_$($index).bat"
+                Write-Host "`nDownloading and executing $($selected.Name) as Admin..." -ForegroundColor Cyan;
+                $tempFile = "$env:TEMP\temp_launch_$($index).bat";
                 
-                Invoke-WebRequest -Uri $url -OutFile$tempFile
-                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait
+                Invoke-WebRequest -Uri $url -OutFile$tempFile;
+                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$tempFile`"" -Wait;
                 
-                if (Test-Path $tempFile) { Remove-Item$tempFile -Force }
+                if (Test-Path $tempFile) { Remove-Item$tempFile -Force; }
             }
             elseif ($selected.Type -in @("RepoWithExe", "RepoWithcmd", "RepoWithps1")) {
                 # Create a dedicated temporary working directory so both the script and EXE/CMD/PS1 live together
-                $workDir = "$env:TEMP\RyuScript3_Work"
-                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path$workDir | Out-Null }
+                $workDir = "$env:TEMP\RyuScript3_Work";
+                if (!(Test-Path $workDir)) { New-Item -ItemType Directory -Path$workDir | Out-Null; }
                 
                 # 1. Download the script from GitHub repo folder
-                $pathParts = $selected.Folder -split '/'$encodedParts = foreach ($part in$pathParts) { [System.Uri]::EscapeDataString($part) }$encodedPath = $encodedParts -join '/'$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)"
-                $localScript = "$workDir\$($selected.FileName)"
+                $pathParts =$selected.Folder -split '/';
+                $encodedParts =$pathParts | ForEach-Object { [System.Uri]::EscapeDataString($_) };$encodedPath = $encodedParts -join '/';$scriptUrl = "https://raw.githubusercontent.com/$repoOwner/$repoName/$branch/$encodedPath/$($selected.FileName)";
+                $localScript = "$workDir\$($selected.FileName)";
                 
-                Write-Host "`nDownloading script from GitHub repository..." -ForegroundColor Cyan
-                Invoke-WebRequest -Uri $scriptUrl -OutFile $localScript
+                Write-Host "`nDownloading script from GitHub repository..." -ForegroundColor Cyan;
+                Invoke-WebRequest -Uri $scriptUrl -OutFile $localScript;
                 
                 # 2. Download the external file into the exact same folder
-                $localExe = "$workDir\$($selected.ExeName)"
-                Write-Host "Downloading $($selected.ExeName) into the same folder..." -ForegroundColor Cyan
-                Invoke-WebRequest -Uri $selected.ExeUrl -OutFile $localExe
+                $localExe = "$workDir\$($selected.ExeName)";
+                Write-Host "Downloading $($selected.ExeName) into the same folder..." -ForegroundColor Cyan;
+                Invoke-WebRequest -Uri $selected.ExeUrl -OutFile $localExe;
                 
                 # 3. Execute the script inside that working directory as Admin based on Type
-                Write-Host "Executing script with required files as Admin..." -ForegroundColor Cyan
+                Write-Host "Executing script with required files as Admin..." -ForegroundColor Cyan;
                 
                 if ($selected.Type -eq "RepoWithps1") {
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$localScript`"" -WorkingDirectory $workDir -Wait
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$localScript`"" -WorkingDirectory $workDir -Wait;
                 } else {
-                    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$localScript`"" -WorkingDirectory $workDir -Wait
+                    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$localScript`"" -WorkingDirectory $workDir -Wait;
                 }
                 
                 # 4. Clean up the working directory after execution
-                if (Test-Path $workDir) { Remove-Item $workDir -Recurse -Force }
+                if (Test-Path $workDir) { Remove-Item $workDir -Recurse -Force; }
             }
         } catch {
-            Write-Host "Error executing script: $_" -ForegroundColor Red
+            Write-Host "Error executing script: $_" -ForegroundColor Red;
         }
         
-        Write-Host "`nPress Enter to return to the menu..."
-        [void](Read-Host)
+        Write-Host "`nPress Enter to return to the menu...";
+        [void](Read-Host);
     } else {
-        Write-Host "Invalid selection. Please enter a number of scripte ." -ForegroundColor Red
-        Start-Sleep -Seconds 1
+        Write-Host "Invalid selection. Please enter a number of scripte ." -ForegroundColor Red;
+        Start-Sleep -Seconds 1;
     }
 }
