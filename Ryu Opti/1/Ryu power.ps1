@@ -1,4 +1,4 @@
-# Fonction pour gérer l'écran de sortie et l'ouverture du lien
+
 function Show-ExitScreen {
     Clear-Host
     Write-Host 'IDA MAKHDAMLKCH BIEN dir "Delete Ryu power".'
@@ -20,7 +20,7 @@ if ($choice1 -eq '2') {
 }
 
 Clear-Host
-# Activation temporaire du mode équilibré pour permettre la suppression
+
 powercfg -setactive SCHEME_BALANCED
 
 # Recherche et suppression de l'ancien Ryu Powerplan
