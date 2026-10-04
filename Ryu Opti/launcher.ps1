@@ -49,7 +49,7 @@ $scripts = @(
 while ($true) {
     Clear-Host
     Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "      Launcher Ryu Tweaks $(version)       " -ForegroundColor Green
+    Write-Host "      Launcher Ryu Tweaks $($version)       " -ForegroundColor Green
     Write-Host "=========================================" -ForegroundColor Cyan
     
     for ($i = 0; $i -lt $scripts.Count; $i++) {
