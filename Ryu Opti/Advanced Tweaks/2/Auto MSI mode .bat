@@ -835,7 +835,7 @@ do {
                 $coreBytes = Get-AssignmentSetBytes -coreNum $targetLogCore
                 Set-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -Value $coreBytes -Type Binary -Force
 
-                Write-Host "[dGPU-DISPLAY] $($dev.Name)" -ForegroundColor Green
+                Write-Host "$gpuTag $($dev.Name)" -ForegroundColor Green
                 Write-Host "        -> Mode: $msiStatusStr | Priority: High | Exclusive P-Core $targetPhysIdx (Logical Core $targetLogCore)" -ForegroundColor Green
             } else {
                 Write-Host "$gpuTag $($dev.Name)" -ForegroundColor Green

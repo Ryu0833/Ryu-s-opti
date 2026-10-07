@@ -1,18 +1,110 @@
 @echo Off
 setlocal EnableExtensions EnableDelayedExpansion
 
-echo rak baghi dir opti ta3i ?
-echo  1 - yes
-echo  2 - no 
+echo Ryu Optimization for Windows (Dont Forget the Restore Point)
+pause
+
+start https://linktr.ee/Ryu0833
+
+goto main
+
+:main
+cls
+echo rak baghi dir :
+echo  1 - Opti
+echo  2 - Network Opti
+echo  3 - Scan System File
+echo  4 - Brave Browser Debloat (ida 3andk)
+echo  5 - Old Right-Click Menu (Only Windows 11)
+echo  0 - exit 
 
 echo ================================
 set /p choice="Select number: "
 
-if "%choice%"=="1" goto opti0
-if "%choice%"=="2" goto exitmsg1
+if "%choice%"=="0" goto exitmsg1
+if "%choice%"=="1" goto opti0  
+if "%choice%"=="2" goto nett
+if "%choice%"=="3" goto scanf
+if "%choice%"=="4" goto brave
+if "%choice%"=="5" goto rc
+
+
+:rc
+
+reg add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve
+taskkill /f /im explorer.exe
+
+goto main
+
+
+:brave
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveRewardsDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveWalletDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveVPNDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveAIChatEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveStatsPingEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveNewsDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveTalkDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "TorDisabled" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveP3AEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "UrlKeyedAnonymizedDataCollectionEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "SafeBrowsingExtendedReportingEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "MetricsReportingEnabled" /t REG_DWORD /d 0 /f
+
+goto main
+
 
 :opti0
 cls
+
+
+:: Microsoft Edge - Debloat
+reg add "HKLM\SOFTWARE\Policies\Microsoft\EdgeUpdate" /v "CreateDesktopShortcutDefault" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallBlocklist" /v "1" /t REG_SZ /d "ofefcgjbeghpigppfmkologfjadafddi" /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "PersonalizationReportingEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ShowRecommendationsEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "HideFirstRunExperience" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "UserFeedbackAllowed" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ConfigureDoNotTrack" /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "AlternateErrorPagesEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "EdgeCollectionsEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "EdgeShoppingAssistantEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "MicrosoftEdgeInsiderPromotionEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "ShowMicrosoftRewards" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "WebWidgetAllowed" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "DiagnosticData" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "EdgeAssetDeliveryServiceEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "WalletDonationEnabled" /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "DefaultBrowserSettingsCampaignEnabled" /t REG_DWORD /d 0 /f
+
+
+::Telemetry Disable
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo" /v Enabled /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Privacy" /v TailoredExperiencesWithDiagnosticDataEnabled /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy" /v HasAccepted /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Input\TIPC" /v Enabled /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\InputPersonalization" /v RestrictImplicitInkCollection /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\InputPersonalization" /v RestrictImplicitTextCollection /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\InputPersonalization\TrainedDataStore" /v HarvestContacts /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsof\Personalization\Settings" /v AcceptedPrivacyPolicy /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v Start_TrackProgs /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v PublishUserActivities /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Siuf\Rules" /v NumberOfSIUFInPeriod /t REG_DWORD /d 0 /f
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Set-MpPreference -SubmitSamplesConsent 2 -ErrorAction SilentlyContinue ; Write-Host '[DEFENDER] Disabled Auto Sample Submission.' ; Set-Service -Name diagtrack -StartupType Disabled -ErrorAction SilentlyContinue ; Stop-Service -Name diagtrack -Force -ErrorAction SilentlyContinue ; Write-Host '[SERVICE] Disabled Telemetry service (diagtrack).' ; Set-Service -Name WerSvc -StartupType Disabled -ErrorAction SilentlyContinue ; Stop-Service -Name WerSvc -Force -ErrorAction SilentlyContinue ; Write-Host '[SERVICE] Disabled Windows Error Reporting service (WerSvc).' ; [Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', '1', 'Machine') ; Write-Host '[ENVIRONMENT] Disabled PowerShell 7 telemetry.' ; Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Siuf\Rules' -Name 'PeriodInNanoSeconds' -ErrorAction SilentlyContinue ; Write-Host '[REGISTRY] Removed Siuf PeriodInNanoSeconds property.'"
+
+
+Set-MpPreference -SubmitSamplesConsent 2
+Set-Service -Name diagtrack -StartupType Disabled
+Set-Service -Name wermgr -StartupType Disabled
+
+::AI disable
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v SettingsPageVisibility /t REG_SZ /d "hide:aicomponents" /f
+reg add "HKLM\SOFTWARE\Policies\WindowsNotepad" /v DisableAIFeatures /t REG_DWORD /d 1 /f
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$Appx = (Get-AppxPackage MicrosoftWindows.Client.CoreAI).PackageFullName; $Sid = (Get-LocalUser $Env:UserName).Sid.Value; if ($Appx -and $Sid) { New-Item \"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore\EndOfLife\$Sid\$Appx\" -Force -ErrorAction SilentlyContinue | Out-Null ; Write-Host '[REGISTRY] Set EndOfLife key for CoreAI.' }; $targets = 'MicrosoftWindows.Client.CoreAI','Copilot','Microsoft.MicrosoftOfficeHub'; foreach ($t in $targets) { Get-AppxPackage -Name \"*$t*\" -AllUsers | ForEach-Object { if ($_.NonRemovable -or $_.IsInbox) { Write-Host \"[SKIPPED - PROTECTED SYSTEM APP] $($_.Name)\" } else { Write-Host \"[REMOVING] $($_.Name)...\" ; Remove-AppxPackage -Package $_.PackageFullName -AllUsers -ErrorAction SilentlyContinue } }; Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like \"*$t*\" | ForEach-Object { Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue } }; winget uninstall -e --name 'Copilot' --silent --force --accept-source-agreements 2>$null ; Write-Host '[WINGET] Uninstalled Copilot via Winget.' ; Set-Service -Name WSAIFabricSvc -StartupType Disabled -ErrorAction SilentlyContinue ; Stop-Service -Name WSAIFabricSvc -Force -ErrorAction SilentlyContinue ; Write-Host '[SERVICE] Disabled Windows AI Fabric service (WSAIFabricSvc).' ; Disable-WindowsOptionalFeature -FeatureName Recall -Online -NoRestart -ErrorAction SilentlyContinue | Out-Null ; Write-Host '[FEATURE] Disabled Windows Recall feature.'"
+
 @powerShell -command "Disable-MMAgent -mc"
 
 powershell -Command "Get-PnpDevice | Where-Object {$_.ConfigManagerErrorCode -eq 45 -or $_.Status -eq 'Disconnected'} | ForEach-Object { Write-Host 'Removing:' $_.Name; pnputil /remove-device $_.InstanceId }"
@@ -20,6 +112,10 @@ powershell -Command "Get-PnpDevice | Where-Object {$_.ConfigManagerErrorCode -eq
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v EnableTransparency /t REG_DWORD /d 0 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" /v "TurnOffWindowsAnimations" /t REG_DWORD /d 1 /f
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "TaskbarAnimations" /t REG_DWORD /d 0 /f
+
+reg add "HKCU\Software\Classes\CLSID\{f874310e-b6b7-47dc-bc84-b9e6b38f5903}" /v "System.IsPinnedToNameSpaceTree" /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Classes\CLSID\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}" /v "System.IsPinnedToNameSpaceTree" /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "LaunchTo" /t REG_DWORD /d 1 /f
 
 reg add "HKLM\SOFTWARE\Microsoft\Input" /v "InputServiceEnabled" /t REG_DWORD /d 0 /f
 
@@ -264,8 +360,7 @@ for /L %%i in (0,1,9) do (
     set EXE_NAME=!GAMES[%%i]!
     set POLICY_NAME=!EXE_NAME:.exe=!
 
-    echo Creating QoS for !EXE_NAME!
-
+    
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "CpuPriorityClass" /t REG_DWORD /d "3" /f
     Reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\!EXE_NAME!\PerfOptions" /v "IoPriority" /t REG_DWORD /d "3" /f
@@ -366,6 +461,11 @@ FOR /F "tokens=*" %%D IN ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Clas
 endlocal
 
 
+gpupdate /force
+
+goto main
+
+
 cls
 echo rak baghi network optimization ?
 echo  1 - yes
@@ -379,9 +479,13 @@ if "%choice%"=="2" goto opti2
 
 :nett
 
+
+ Reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" /v "DisabledComponents" /t REG_DWORD /d "32" /f
+
 ::powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_pacer"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_tcpip6"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Disable-NetAdapterBinding -Name '*' -ComponentID ms_server"
+
 
 
 netsh interface tcp set global autotuninglevel=restricted
@@ -491,7 +595,7 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v MaxUserPort /d 65534 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /t REG_DWORD /v TcpTimedWaitDelay /d 30 /f 
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v NonBestEffortLimit /d 0 /f
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f
+::reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_DWORD /v TimerResolution /d 1 /f
 reg add "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Tcpip\QoS" /t REG_SZ /v "Do not use NLA" /d 1 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /t REG_DWORD /v LargeSystemCache /d 0 /f 
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /t REG_DWORD /v Size /d 3 /f 
@@ -523,7 +627,9 @@ ipconfig/release
 ipconfig/Renew
 ipconfig/flushdns
 
-goto opti2
+gpupdate /force
+
+goto main
 
 :opti2
 
@@ -745,6 +851,7 @@ if "%s%"=="2" goto exitmsg
 cls
 DISM.exe /Online /Cleanup-image /Restorehealth
 sfc /scannow
+goto main
 goto exitmsg
 
 :exitmsg
@@ -763,7 +870,7 @@ endlocal
 cls
 echo Adrob tala 3la TikTok w matnssach follow
 pause
-start https://linktr.ee/Ryu0833
+::start https://linktr.ee/Ryu0833
 
 
 exit
