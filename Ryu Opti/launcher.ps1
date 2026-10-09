@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version    = "1.1.0"
+$version    = "1.2.0"
 
 #  options 
 $scripts = @(
@@ -21,10 +21,16 @@ $scripts = @(
         FileName = "Ryu power.ps1" 
     },
     @{ 
-        Name     = "Opti(PC restart\System restore)"
+        Name     = "Ryu Opti(PC restart\System restore)"
         Type     = "RepoScript"
         Folder   = "Ryu Opti/2"
         FileName = "opti.bat" 
+    },
+    @{ 
+        Name     = "Basic Opti"
+        Type     = "RepoScript"
+        Folder   = "Ryu Opti/4"
+        FileName = "opti1.bat" 
     },
     @{ 
         Name     = "Shader Cache Cleanup(Safe mode)"
@@ -51,7 +57,7 @@ $scripts = @(
 while ($true) {
     Clear-Host
     Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "       Launcher Ryu Tweaks 1.1.0         " -ForegroundColor Green
+    Write-Host "       Launcher Ryu Tweaks $version      " -ForegroundColor Green
     Write-Host "=========================================" -ForegroundColor Cyan
     
     for ($i = 0; $i -lt $scripts.Count; $i++) {

@@ -4,7 +4,6 @@ setlocal EnableExtensions EnableDelayedExpansion
 echo Ryu Optimization for Windows (Dont Forget the Restore Point)
 pause
 
-start https://linktr.ee/Ryu0833
 
 goto main
 
@@ -13,9 +12,6 @@ cls
 echo rak baghi dir :
 echo  1 - Opti
 echo  2 - Network Opti
-echo  3 - Scan System File
-echo  4 - Brave Browser Debloat (ida 3andk)
-echo  5 - Old Right-Click Menu (Only Windows 11)
 echo  0 - exit 
 
 echo ================================
@@ -24,35 +20,6 @@ set /p choice="Select number: "
 if "%choice%"=="0" goto exitmsg1
 if "%choice%"=="1" goto opti0  
 if "%choice%"=="2" goto nett
-if "%choice%"=="3" goto scanf
-if "%choice%"=="4" goto brave
-if "%choice%"=="5" goto rc
-
-
-:rc
-
-reg add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve
-taskkill /f /im explorer.exe
-start explorer.exe
-
-goto main
-
-
-:brave
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveRewardsDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveWalletDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveVPNDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveAIChatEnabled" /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveStatsPingEnabled" /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveNewsDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveTalkDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "TorDisabled" /t REG_DWORD /d 1 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "BraveP3AEnabled" /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "UrlKeyedAnonymizedDataCollectionEnabled" /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "SafeBrowsingExtendedReportingEnabled" /t REG_DWORD /d 0 /f
-reg add "HKLM\SOFTWARE\Policies\BraveSoftware\Brave" /v "MetricsReportingEnabled" /t REG_DWORD /d 0 /f
-
-goto main
 
 
 :opti0
@@ -844,7 +811,7 @@ endlocal
 cls
 echo Adrob tala 3la TikTok w matnssach follow
 pause
-::start https://linktr.ee/Ryu0833
+start https://linktr.ee/Ryu0833
 
 
 exit
