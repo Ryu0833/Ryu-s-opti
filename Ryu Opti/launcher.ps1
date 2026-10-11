@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version    = "1.2.0"
+$version    = "1.2.1"
 
 #  options 
 $scripts = @(
@@ -25,6 +25,12 @@ $scripts = @(
         Type     = "RepoScript"
         Folder   = "Ryu Opti/2"
         FileName = "opti.bat" 
+    },
+    @{ 
+        Name     = "Auto MSI mode(PC restart\E-core Disable)"
+        Type     = "RepoScript"
+        Folder   = "Ryu Opti/Advanced Tweaks/2"
+        FileName = "Auto MSI mode .bat" 
     },
     @{ 
         Name     = "Basic Opti"
@@ -45,12 +51,6 @@ $scripts = @(
         FileName = "timer00.bat" 
         ExeUrl   = "https://github.com/valleyofdoom/TimerResolution/releases/download/SetTimerResolution-v1.0.0/SetTimerResolution.exe"
         ExeName  = "SetTimerResolution.exe"
-    },
-    @{ 
-        Name     = "Auto MSI mode(PC restart\E-core Disable)"
-        Type     = "RepoScript"
-        Folder   = "Ryu Opti/Advanced Tweaks/2"
-        FileName = "Auto MSI mode .bat" 
     }
 )
 
