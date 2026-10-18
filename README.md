@@ -22,7 +22,7 @@ irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launche
 OFFLINE Mode :
 
 ```ps1
-irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcher offline.ps1 | iex
+irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcheroffline.ps1 | iex
 ```
  
 ### How to open an admin terminal
