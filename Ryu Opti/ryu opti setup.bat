@@ -59,8 +59,8 @@ echo =========================================
 echo  Done!
 echo  Folder   : %TARGET%
 echo  Launcher : "Ryu Launcher" shortcut on your Desktop
-echo             - online : you choose Online mode (update) or Offline mode
-echo             - no internet: runs the local copy automatically
+echo             - always checks GitHub for updates on start
+echo             - if the update fails (no internet), runs the local copy
 echo =========================================
 echo.
 pause
@@ -90,8 +90,8 @@ exit /b 1
 ::W::powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Ryu Launcher Offline.ps1"
 
 ::P::# Ryu Launcher (Offline)
-::P::# - Online : syncs this folder with the GitHub repo on every start (scripts + menu follow launcher.ps1 updates)
-::P::# - Offline: runs the local copy
+::P::# - Always tries to sync this folder with the GitHub repo on start (scripts + menu follow launcher.ps1 updates)
+::P::# - If the update fails (no internet), it runs the local copy
 ::P::$root = $PSScriptRoot
 ::P::
 ::P::# Relaunch as Administrator if needed
@@ -151,36 +151,13 @@ exit /b 1
 ::P::    } catch { return $null }
 ::P::}
 ::P::
-::P::function Test-Online {
-::P::    try {
-::P::        Invoke-WebRequest -UseBasicParsing -Method Head -TimeoutSec 6 -Uri 'https://github.com' -ErrorAction Stop | Out-Null
-::P::        return $true
-::P::    } catch { return $false }
-::P::}
-::P::
 ::P::Clear-Host
-::P::Write-Host "Checking internet connection..." -ForegroundColor Cyan
-::P::if (Test-Online) {
-::P::    Write-Host ""
-::P::    Write-Host "Internet detected. Choose a mode:" -ForegroundColor Green
-::P::    Write-Host "1. Online mode  - update from GitHub, then run the latest scripts"
-::P::    Write-Host "2. Offline mode - skip the update, run the local copy"
-::P::    $mode = Read-Host "Select 1 or 2 (default 1)"
-::P::    if ($mode -eq '2') {
-::P::        $status = 'Offline mode (selected) - using local copy'
-::P::        $statusColor = 'Yellow'
-::P::    } else {
-::P::        Write-Host "Updating from GitHub..." -ForegroundColor Cyan
-::P::        if (Sync-Repo) {
-::P::            $status = 'Online mode - synced with GitHub (latest version)'
-::P::            $statusColor = 'Green'
-::P::        } else {
-::P::            $status = 'Update failed - using local copy'
-::P::            $statusColor = 'Yellow'
-::P::        }
-::P::    }
+::P::Write-Host "Checking GitHub for updates..." -ForegroundColor Cyan
+::P::if (Sync-Repo) {
+::P::    $status = 'Synced with GitHub (latest version)'
+::P::    $statusColor = 'Green'
 ::P::} else {
-::P::    $status = 'No internet - Offline mode, using local copy'
+::P::    $status = 'Update unavailable (offline?) - using local copy'
 ::P::    $statusColor = 'Yellow'
 ::P::}
 ::P::

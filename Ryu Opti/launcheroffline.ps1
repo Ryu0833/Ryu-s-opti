@@ -1,6 +1,6 @@
 # Ryu Launcher (Offline)
-# - Online : syncs this folder with the GitHub repo on every start (scripts + menu follow launcher.ps1 updates)
-# - Offline: runs the local copy
+# - Always tries to sync this folder with the GitHub repo on start (scripts + menu follow launcher.ps1 updates)
+# - If the update fails (no internet), it runs the local copy
 $root = $PSScriptRoot
 
 # Relaunch as Administrator if needed
@@ -60,36 +60,13 @@ function Get-Menu {
     } catch { return $null }
 }
 
-function Test-Online {
-    try {
-        Invoke-WebRequest -UseBasicParsing -Method Head -TimeoutSec 6 -Uri 'https://github.com' -ErrorAction Stop | Out-Null
-        return $true
-    } catch { return $false }
-}
-
 Clear-Host
-Write-Host "Checking internet connection..." -ForegroundColor Cyan
-if (Test-Online) {
-    Write-Host ""
-    Write-Host "Internet detected. Choose a mode:" -ForegroundColor Green
-    Write-Host "1. Online mode  - update from GitHub, then run the latest scripts"
-    Write-Host "2. Offline mode - skip the update, run the local copy"
-    $mode = Read-Host "Select 1 or 2 (default 1)"
-    if ($mode -eq '2') {
-        $status = 'Offline mode (selected) - using local copy'
-        $statusColor = 'Yellow'
-    } else {
-        Write-Host "Updating from GitHub..." -ForegroundColor Cyan
-        if (Sync-Repo) {
-            $status = 'Online mode - synced with GitHub (latest version)'
-            $statusColor = 'Green'
-        } else {
-            $status = 'Update failed - using local copy'
-            $statusColor = 'Yellow'
-        }
-    }
+Write-Host "Checking GitHub for updates..." -ForegroundColor Cyan
+if (Sync-Repo) {
+    $status = 'Synced with GitHub (latest version)'
+    $statusColor = 'Green'
 } else {
-    $status = 'No internet - Offline mode, using local copy'
+    $status = 'Update unavailable (offline?) - using local copy'
     $statusColor = 'Yellow'
 }
 
