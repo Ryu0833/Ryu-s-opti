@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version    = "1.2.1"
+$version    = "1.3.0"
 
 #  options 
 $scripts = @(
@@ -31,6 +31,12 @@ $scripts = @(
         Type     = "RepoScript"
         Folder   = "Ryu Opti/Advanced Tweaks/2"
         FileName = "Auto MSI mode .bat" 
+    },
+    @{ 
+        Name     = "Ryu Tuto"
+        Type     = "RepoScript"
+        Folder   = "Ryu Opti/5"
+        FileName = "opti2.bat" 
     },
     @{ 
         Name     = "Basic Opti"

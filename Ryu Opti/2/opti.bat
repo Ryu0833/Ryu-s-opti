@@ -187,7 +187,7 @@ if "%choice%"=="2" goto opti1
 
 netsh interface tcp set global autotuninglevel=disable
 
-Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "42" /f
+Reg add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "36" /f
 
 
 ::powershell -Command "$timer = Get-PnpDevice -Class System | Where-Object {$_.FriendlyName -like '*High precision event timer*'}; foreach ($m in $timer) { Disable-PnpDevice -InstanceId $m.InstanceId -Confirm:$false }"
@@ -377,9 +377,12 @@ Reg add "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\GameDVR" /v "Allow
 
 Reg add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d "100" /f
 Reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDataQueueSize" /t REG_DWORD /d "100" /f
-Reg add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "0" /f 
+Reg add "HKCU\Control Panel\Mouse" /v "MouseAccel" /t REG_SZ /d "0" /f
+Reg add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "-" /f 
 Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold1" /t REG_SZ /d "0" /f 
 Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold2" /t REG_SZ /d "0" /f 
+::Reg add "HKCU\Control Panel\Mouse" /v "RawMouseThrottleDuration" /t REG_DWORD /d "20" /f
+
 
 setlocal EnableExtensions EnableDelayedExpansion
 
@@ -548,6 +551,8 @@ netsh int tcp set global rss=enabled
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Wake on pattern match' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'WOL & Shutdown Link Speed' -DisplayValue 'Not Speed Down' -ErrorAction SilentlyContinue }"
 @powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Shutdown Wake-On-Lan' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue }"
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Receive Buffers' -DisplayValue '128' -ErrorAction SilentlyContinue }" 
+@powershell -command "Get-NetAdapter | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName 'Transmit buffers' -DisplayValue '64' -ErrorAction SilentlyContinue }" 
 
 
 for /f "tokens=*" %%i in ('@powershell -command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name"') do set NIC=%%i
