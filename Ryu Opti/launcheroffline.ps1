@@ -111,7 +111,6 @@ function Install-Local {
         $sc = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop 'Ryu Launcher.lnk'))
         $sc.TargetPath = $bat
         $sc.WorkingDirectory = $root
-        $sc.IconLocation = 'shell32.dll,21'
         $sc.Save()
     } catch {}
     Write-Host "Offline mode installed in: $root" -ForegroundColor Green
