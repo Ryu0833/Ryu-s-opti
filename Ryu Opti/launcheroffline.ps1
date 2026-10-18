@@ -1,17 +1,37 @@
-# Ryu Launcher (Offline)
-# - Always tries to sync this folder with the GitHub repo on start (scripts + menu follow launcher.ps1 updates)
-# - If the update fails (no internet), it runs the local copy
-$root = $PSScriptRoot
+# Ryu Launcher (Offline) - launcheroffline.ps1
+#
+# Install / first run (Admin PowerShell or Terminal):
+#   irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcheroffline.ps1 | iex
+#
+# - Run with irm | iex : downloads the repo to Desktop\Ryu Opti, saves this launcher there,
+#                        creates the "Ryu Launcher" Desktop shortcut, then opens the menu.
+# - Run from the folder (shortcut): always tries to sync with GitHub first;
+#                        if the update fails (no internet) it runs the local copy.
+
+$selfUrl = 'https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcheroffline.ps1'
+$repo = 'Ryu0833/Ryu-s-opti'
+$isFile = [bool]$PSCommandPath
 
 # Relaunch as Administrator if needed
 if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Start-Process PowerShell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    if ($isFile) {
+        Start-Process PowerShell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    } else {
+        Start-Process PowerShell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"irm '$selfUrl' | iex`"" -Verb RunAs
+    }
     exit
 }
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $ProgressPreference = 'SilentlyContinue'
-$repo = 'Ryu0833/Ryu-s-opti'
+
+$desktop = [Environment]::GetFolderPath('Desktop')
+if ($isFile) {
+    $root = $PSScriptRoot
+} else {
+    $root = Join-Path $desktop 'Ryu Opti'
+    if (!(Test-Path -LiteralPath $root)) { New-Item -ItemType Directory -Path $root | Out-Null }
+}
 
 function Sync-Repo {
     $tmp = Join-Path $env:TEMP 'RyuOpti_Sync'
@@ -32,7 +52,7 @@ function Sync-Repo {
         $src = Get-ChildItem (Join-Path $tmp 'x') -Directory | Select-Object -First 1
         $inner = Join-Path $src.FullName 'Ryu Opti'
         if (!(Test-Path $inner)) { return $false }
-        & robocopy $inner $root /E /XF 'Ryu Launcher Offline.ps1' 'Ryu Launcher Offline.bat' /NFL /NDL /NJH /NJS /NP | Out-Null
+        & robocopy $inner $root /E /NFL /NDL /NJH /NJS /NP | Out-Null
         return ($LASTEXITCODE -lt 8)
     } catch {
         return $false
@@ -60,14 +80,59 @@ function Get-Menu {
     } catch { return $null }
 }
 
+# Save any helper EXE the menu needs (e.g. SetTimerResolution.exe) so it also works offline
+function Save-Exes($list) {
+    foreach ($s in $list) {
+        if ($s.ExeName -and $s.ExeUrl) {
+            $rel = ($s.Folder -replace '^Ryu Opti/?', '') -replace '/', '\'
+            $d = if ($rel) { Join-Path $root $rel } else { $root }
+            $e = Join-Path $d $s.ExeName
+            if ((Test-Path -LiteralPath $d) -and !(Test-Path -LiteralPath $e)) {
+                try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri $s.ExeUrl -OutFile $e -ErrorAction Stop } catch {}
+            }
+        }
+    }
+}
+
+# First run through irm | iex: keep a local copy of this launcher + create the shortcut
+function Install-Local {
+    $self = Join-Path $root 'launcheroffline.ps1'
+    if (!(Test-Path -LiteralPath $self)) {
+        try {
+            Invoke-WebRequest -UseBasicParsing -Uri $selfUrl -OutFile $self -ErrorAction Stop
+        } catch {
+            Write-Host "Could not save the offline launcher: $_" -ForegroundColor Red
+            return
+        }
+    }
+    $bat = Join-Path $root 'Ryu Launcher Offline.bat'
+    Set-Content -LiteralPath $bat -Value "@echo off`r`npowershell -NoProfile -ExecutionPolicy Bypass -File `"%~dp0launcheroffline.ps1`"" -Encoding Ascii
+    try {
+        $sc = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $desktop 'Ryu Launcher.lnk'))
+        $sc.TargetPath = $bat
+        $sc.WorkingDirectory = $root
+        $sc.IconLocation = 'shell32.dll,21'
+        $sc.Save()
+    } catch {}
+    Write-Host "Offline mode installed in: $root" -ForegroundColor Green
+    Write-Host "Use the 'Ryu Launcher' shortcut on your Desktop next time." -ForegroundColor Green
+    Start-Sleep -Seconds 2
+}
+
 Clear-Host
 Write-Host "Checking GitHub for updates..." -ForegroundColor Cyan
-if (Sync-Repo) {
+$synced = Sync-Repo
+if ($synced) {
     $status = 'Synced with GitHub (latest version)'
     $statusColor = 'Green'
 } else {
     $status = 'Update unavailable (offline?) - using local copy'
     $statusColor = 'Yellow'
+}
+if (-not $isFile) { Install-Local }
+if ($synced) {
+    $first = Get-Menu
+    if ($first) { Save-Exes $first.Scripts }
 }
 
 while ($true) {
