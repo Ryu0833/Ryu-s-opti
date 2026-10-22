@@ -230,6 +230,79 @@ function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string
     }
 }
 
+$script:NetDriverCache = @{}
+function Get-NetDriverType {
+    param([string]$SvcName, [string]$PnpID, [string]$DrvPath)
+
+    if ([string]::IsNullOrWhiteSpace($SvcName)) {
+        return [PSCustomObject]@{ Type = 'NDIS'; Detail = 'no service key, assumed NDIS' }
+    }
+    if ($script:NetDriverCache.ContainsKey($SvcName)) { return $script:NetDriverCache[$SvcName] }
+
+    $evidence = [System.Collections.Generic.List[string]]::new()
+    $isCx     = $false
+    $svcReg   = "HKLM:\SYSTEM\CurrentControlSet\Services\$SvcName"
+
+    # 1. Service registry key
+    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
+    $deps     = [string]($svcProps.DependOnService -join " ")
+    $imgPath  = [string]$svcProps.ImagePath
+    $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
+
+    if (Test-Path "$svcReg\Wdf") { $evidence.Add("Wdf service key") }
+    if ($null -ne $wdfProps.KmdfVersion) { $evidence.Add("KMDF $($wdfProps.KmdfVersion)") }
+    if ($null -ne $wdfProps.UmdfVersion) { $evidence.Add("UMDF $($wdfProps.UmdfVersion)") }
+    if ($deps -match '(?i)NetAdapterCx') { $isCx = $true; $evidence.Add("NetAdapterCx dependency") }
+    if ($deps -match '(?i)Wdf01000|WdfLdr') { $evidence.Add("Wdf dependency") }
+
+    # 2. Device registry key
+    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Enum\$PnpID\Device Parameters\Wdf") { $evidence.Add("Wdf device key") }
+
+    # 3. Driver binary import table
+    $sysPath = $null
+    if ($imgPath) {
+        $p = $imgPath -replace '^\\\?\?\\', ''
+        $p = $p -replace '(?i)^\\SystemRoot', $env:windir
+        if ($p -notmatch '^[A-Za-z]:\\') { $p = Join-Path $env:windir $p }
+        if (Test-Path $p) { $sysPath = $p }
+    }
+    if (-not $sysPath) {
+        $fallback = Join-Path $env:windir "System32\drivers\$SvcName.sys"
+        if (Test-Path $fallback) { $sysPath = $fallback }
+    }
+    if ($sysPath) {
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes($sysPath)
+            $text  = [System.Text.Encoding]::ASCII.GetString($bytes)
+            if ($text -match '(?i)NetAdapterCx') { $isCx = $true; $evidence.Add("imports NetAdapterCx") }
+            if ($text -match '(?i)WdfLdr\.sys|Wdf01000') { $evidence.Add("imports WdfLdr") }
+        } catch {}
+    }
+
+    # 4. Driver INF
+    if ($DrvPath) {
+        $infName = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Class\$DrvPath" -Name "InfPath" -ErrorAction SilentlyContinue).InfPath
+        if ($infName) {
+            $infFull = Join-Path $env:windir "INF\$infName"
+            if (Test-Path $infFull) {
+                try {
+                    if (Select-String -Path $infFull -Pattern '(?i)^\s*(KmdfService|UmdfService)\s*=' -Quiet -ErrorAction SilentlyContinue) { $evidence.Add("INF KmdfService/UmdfService") }
+                    if (Select-String -Path $infFull -Pattern '(?i)NetAdapterCx' -Quiet -ErrorAction SilentlyContinue) { $isCx = $true; $evidence.Add("INF NetAdapterCx") }
+                } catch {}
+            }
+        }
+    }
+
+    if ($evidence.Count -gt 0) {
+        $kind = if ($isCx) { "NetAdapterCx" } elseif ($wdfProps.UmdfVersion) { "UMDF" } else { "KMDF" }
+        $result = [PSCustomObject]@{ Type = 'WDF'; Detail = "$kind - " + (($evidence | Select-Object -Unique) -join ', ') }
+    } else {
+        $result = [PSCustomObject]@{ Type = 'NDIS'; Detail = 'plain NDIS miniport (no WDF evidence)' }
+    }
+    $script:NetDriverCache[$SvcName] = $result
+    return $result
+}
+
 # ====================================================================
 # PHASE 1: HARDWARE AND IRQ MAPPING (RUNS ONCE AT STARTUP)
 # ====================================================================
@@ -364,31 +437,12 @@ function Get-PciDevices {
             $drvPath = $enumRegProps.Driver
 
             $driverType = "N/A"
+            $driverDetail = ""
 
             if ($dev.PNPClass -eq 'Net') {
-                $isWdf = $false
-
-                if ($svcName) {
-                    $svcReg = "HKLM:\SYSTEM\CurrentControlSet\Services\$svcName"
-                    $pnpWdfReg = "HKLM:\SYSTEM\CurrentControlSet\Enum\$pnpID\Device Parameters\Wdf"
-
-                    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
-                    $deps = [string]($svcProps.DependOnService -join " ")
-                    $imgPath = [string]$svcProps.ImagePath
-
-                    $hasWdfKey = (Test-Path "$svcReg\Wdf") -or (Test-Path $pnpWdfReg)
-                    $hasWdfImg = $imgPath -match "(?i)wdf|netadapter"
-                    $hasWdfDeps = $deps -match "(?i)Wdf01|NetAdapterCx"
-
-                    $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
-                    $hasWdfVersionProps = ($null -ne $wdfProps.KmdfVersion -or $null -ne $wdfProps.UmdfVersion -or $null -ne $wdfProps.WdfSection)
-
-                    if ($hasWdfKey -or $hasWdfImg -or $hasWdfDeps -or $hasWdfVersionProps) {
-                        $isWdf = $true
-                    }
-
-                    $driverType = if ($isWdf) { "WDF" } else { "NDIS" }
-                }
+                $netInfo = Get-NetDriverType -SvcName $svcName -PnpID $pnpID -DrvPath $drvPath
+                $driverType = $netInfo.Type
+                $driverDetail = $netInfo.Detail
             }
 
             # Normalize Class and Identify iGPU
@@ -551,6 +605,7 @@ function Get-PciDevices {
                 Class         = $normalizedClass
                 Service       = $svcName
                 DriverType    = $driverType
+                DriverDetail  = $driverDetail
                 Name          = $dev.Name
                 MSIMode       = $msiMode
                 MSIColor      = $msiColor
@@ -976,7 +1031,7 @@ do {
             Clear-Host
             Write-Host "==================================================================================" -ForegroundColor Cyan
             Write-Host " DEVICE ($currentDevNum/$($devList.Count)): $($dev.Name)" -ForegroundColor Yellow
-            $classInfo = if ($dev.Class -eq 'Net') { "$($dev.Class) ($($dev.DriverType))" } else { $dev.Class }
+            $classInfo = if ($dev.Class -eq 'Net') { "$($dev.Class) ($($dev.DriverType): $($dev.DriverDetail))" } else { $dev.Class }
             $infStatus = if ($null -ne $dev.InfMsiValue) { "Explicit ($($dev.InfMsiValue))" } else { "Unknown" }
             Write-Host " Class: $classInfo | INF: $($dev.InfName) ($infStatus) | Current MSI: $($dev.MSIMode) | Priority: $($dev.Priority) | Core: $($dev.Core)" -ForegroundColor Gray
             Write-Host "==================================================================================" -ForegroundColor Cyan
@@ -1117,7 +1172,7 @@ do {
             Clear-Host
             Write-Host "==================================================================================" -ForegroundColor Cyan
             Write-Host " CONFIGURE DEVICE: $($targetDev.Name)" -ForegroundColor Yellow
-            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType))" } else { $targetDev.Class }$infStatus = if ($null -ne$targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
+            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType): $($targetDev.DriverDetail))" } else { $targetDev.Class }$infStatus = if ($null -ne$targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
             Write-Host " Class: $classInfo \vert{} PNP ID:$($targetDev.PNPID) \vert{} INF:$($targetDev.InfName) ($infStatus)" -ForegroundColor Gray
             Write-Host " Current MSI: $($targetDev.MSIMode) | Priority: $($targetDev.Priority) | Core: $($targetDev.Core)" -ForegroundColor Gray
             Write-Host "==================================================================================" -ForegroundColor Cyan
