@@ -31,7 +31,7 @@ if "%choice%"=="5" goto snap
 
 :snap
 cls
-https://www.tiktok.com/@ryu_val_/video/7675593033622048021?is_from_webapp=1&sender_device=pc&web_id=7694448479373018631
+start https://www.tiktok.com/@ryu_val_/video/7675593033622048021?is_from_webapp=1&sender_device=pc&web_id=7694448479373018631
 
 goto main
 
