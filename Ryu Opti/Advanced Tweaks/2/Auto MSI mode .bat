@@ -230,76 +230,68 @@ function Set-TreePriority ([PSCustomObject]$Device, [int]$PriorityValue, [string
     }
 }
 
+# RSS-based classification of network adapters:
+#   RSS exists AND can be changed by the driver  -> 'NDIS' (leave core affinity alone, keep RSS working)
+#   RSS missing, or present but cannot be changed -> 'WDF'  (safe to pin the interrupt to a single core)
+# The check is read-only: it never toggles RSS on the adapter.
 $script:NetDriverCache = @{}
 function Get-NetDriverType {
     param([string]$SvcName, [string]$PnpID, [string]$DrvPath)
 
-    if ([string]::IsNullOrWhiteSpace($SvcName)) {
-        return [PSCustomObject]@{ Type = 'NDIS'; Detail = 'no service key, assumed NDIS' }
-    }
-    if ($script:NetDriverCache.ContainsKey($SvcName)) { return $script:NetDriverCache[$SvcName] }
+    if ($script:NetDriverCache.ContainsKey($PnpID)) { return $script:NetDriverCache[$PnpID] }
 
-    $evidence = [System.Collections.Generic.List[string]]::new()
-    $isCx     = $false
-    $svcReg   = "HKLM:\SYSTEM\CurrentControlSet\Services\$SvcName"
+    $rssExists     = $false
+    $rssChangeable = $false
+    $notes         = [System.Collections.Generic.List[string]]::new()
 
-    # 1. Service registry key
-    $svcProps = Get-ItemProperty -Path $svcReg -ErrorAction SilentlyContinue
-    $deps     = [string]($svcProps.DependOnService -join " ")
-    $imgPath  = [string]$svcProps.ImagePath
-    $wdfProps = Get-ItemProperty -Path "$svcReg\Wdf" -ErrorAction SilentlyContinue
+    # 1. Find the NetAdapter object that belongs to this PCI device
+    $adapter = $null
+    try {
+        $adapter = Get-NetAdapter -ErrorAction SilentlyContinue |
+            Where-Object { $_.PnPDeviceID -eq $PnpID } | Select-Object -First 1
+    } catch {}
 
-    if (Test-Path "$svcReg\Wdf") { $evidence.Add("Wdf service key") }
-    if ($null -ne $wdfProps.KmdfVersion) { $evidence.Add("KMDF $($wdfProps.KmdfVersion)") }
-    if ($null -ne $wdfProps.UmdfVersion) { $evidence.Add("UMDF $($wdfProps.UmdfVersion)") }
-    if ($deps -match '(?i)NetAdapterCx') { $isCx = $true; $evidence.Add("NetAdapterCx dependency") }
-    if ($deps -match '(?i)Wdf01000|WdfLdr') { $evidence.Add("Wdf dependency") }
+    if (-not $adapter) {
+        $notes.Add("no NetAdapter object found")
+    } else {
+        # 2. Does the adapter expose RSS at all?
+        $rss = $null
+        try { $rss = Get-NetAdapterRss -Name $adapter.Name -ErrorAction SilentlyContinue } catch {}
+        if ($rss) {
+            $rssExists = $true
+            $state = if ($rss.Enabled) { "enabled" } else { "disabled" }
+            $notes.Add("RSS present ($state, max $($rss.MaxProcessors) procs)")
+        } else {
+            $notes.Add("RSS not supported by driver")
+        }
 
-    # 2. Device registry key
-    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Enum\$PnpID\Device Parameters\Wdf") { $evidence.Add("Wdf device key") }
-
-    # 3. Driver binary import table
-    $sysPath = $null
-    if ($imgPath) {
-        $p = $imgPath -replace '^\\\?\?\\', ''
-        $p = $p -replace '(?i)^\\SystemRoot', $env:windir
-        if ($p -notmatch '^[A-Za-z]:\\') { $p = Join-Path $env:windir $p }
-        if (Test-Path $p) { $sysPath = $p }
-    }
-    if (-not $sysPath) {
-        $fallback = Join-Path $env:windir "System32\drivers\$SvcName.sys"
-        if (Test-Path $fallback) { $sysPath = $fallback }
-    }
-    if ($sysPath) {
-        try {
-            $bytes = [System.IO.File]::ReadAllBytes($sysPath)
-            $text  = [System.Text.Encoding]::ASCII.GetString($bytes)
-            if ($text -match '(?i)NetAdapterCx') { $isCx = $true; $evidence.Add("imports NetAdapterCx") }
-            if ($text -match '(?i)WdfLdr\.sys|Wdf01000') { $evidence.Add("imports WdfLdr") }
-        } catch {}
-    }
-
-    # 4. Driver INF
-    if ($DrvPath) {
-        $infName = (Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Class\$DrvPath" -Name "InfPath" -ErrorAction SilentlyContinue).InfPath
-        if ($infName) {
-            $infFull = Join-Path $env:windir "INF\$infName"
-            if (Test-Path $infFull) {
-                try {
-                    if (Select-String -Path $infFull -Pattern '(?i)^\s*(KmdfService|UmdfService)\s*=' -Quiet -ErrorAction SilentlyContinue) { $evidence.Add("INF KmdfService/UmdfService") }
-                    if (Select-String -Path $infFull -Pattern '(?i)NetAdapterCx' -Quiet -ErrorAction SilentlyContinue) { $isCx = $true; $evidence.Add("INF NetAdapterCx") }
-                } catch {}
+        # 3. Can RSS be changed? The driver must expose the standard *RSS keyword
+        #    (advanced property) or the key must exist in the adapter's class registry key.
+        if ($rssExists) {
+            $keywordFound = $false
+            try {
+                $adv = Get-NetAdapterAdvancedProperty -Name $adapter.Name -RegistryKeyword '*RSS' -ErrorAction SilentlyContinue
+                if ($adv) { $keywordFound = $true }
+            } catch {}
+            if (-not $keywordFound -and $DrvPath) {
+                $classProps = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Class\$DrvPath" -ErrorAction SilentlyContinue
+                if ($classProps -and $classProps.PSObject.Properties['*RSS']) { $keywordFound = $true }
+            }
+            if ($keywordFound) {
+                $rssChangeable = $true
+                $notes.Add("*RSS keyword exposed (changeable)")
+            } else {
+                $notes.Add("no *RSS keyword (cannot be changed)")
             }
         }
     }
 
-    if ($evidence.Count -gt 0) {
-        $kind = if ($isCx) { "NetAdapterCx" } elseif ($wdfProps.UmdfVersion) { "UMDF" } else { "KMDF" }
-        $result = [PSCustomObject]@{ Type = 'WDF'; Detail = "$kind - " + (($evidence | Select-Object -Unique) -join ', ') }
+    if ($rssExists -and $rssChangeable) {
+        $result = [PSCustomObject]@{ Type = 'NDIS'; Detail = ($notes -join ', ') }
     } else {
-        $result = [PSCustomObject]@{ Type = 'NDIS'; Detail = 'plain NDIS miniport (no WDF evidence)' }
+        $result = [PSCustomObject]@{ Type = 'WDF'; Detail = ($notes -join ', ') }
     }
-    $script:NetDriverCache[$SvcName] = $result
+    $script:NetDriverCache[$PnpID] = $result
     return $result
 }
 
@@ -972,7 +964,7 @@ do {
                     Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (Integrated GPU - No Core Lock)" -ForegroundColor Gray
                 } else {
                     Write-Host "[NET-NDIS] $($dev.Name)" -ForegroundColor Cyan
-                    Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (NDIS Driver - RSS Preserved)" -ForegroundColor Gray
+                    Write-Host "        -> Mode: $msiStatusStr | Priority: $targetPriorityName | Core: Default (RSS available - RSS Preserved)" -ForegroundColor Gray
                 }
                 Set-TreePriority -Device $dev -PriorityValue $targetPriorityVal -PriorityName $targetPriorityName -Indent "        "
             } else {
@@ -1041,9 +1033,9 @@ do {
             Write-Host "   [ENTER] Proceed with configuration"
             $resetChoice = Read-Host "Choice [R or ENTER]"
 
-            if ($resetChoice -eq 'R' -or$resetChoice -eq 'r') {
-                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path$dev.RegMSIPath -Force | Out-Null }
-                if ($null -ne$dev.InfMsiValue) {
+            if ($resetChoice -eq 'R' -or $resetChoice -eq 'r') {
+                if (-not (Test-Path $dev.RegMSIPath)) { New-Item -Path $dev.RegMSIPath -Force | Out-Null }
+                if ($null -ne $dev.InfMsiValue) {
                     Set-ItemProperty -Path $dev.RegMSIPath -Name "MSISupported" -Value $dev.InfMsiValue -Type DWord -Force
                     $statusMsg = if ($dev.InfMsiValue -eq 1) { "ENABLED" } else { "DISABLED" }
                     Write-Host "   -> MSI Mode updated from INF: $statusMsg" -ForegroundColor Gray
@@ -1100,7 +1092,7 @@ do {
                 $prioChoice = Read-Host "Choice [1-4 or ENTER]"
 
                 if ($prioChoice -in @('1','2','3','4')) {
-                    if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path$dev.RegPrioPath -Force | Out-Null }
+                    if (-not (Test-Path $dev.RegPrioPath)) { New-Item -Path $dev.RegPrioPath -Force | Out-Null }
                     $targetPrioVal = switch ($prioChoice) { '1'{3} '2'{2} '3'{1} '4'{0} }
                     $targetPrioName = switch ($prioChoice) { '1'{"High"} '2'{"Normal"} '3'{"Low"} '4'{"Undefined"} }
                     Set-ItemProperty -Path $dev.RegPrioPath -Name "DevicePriority" -Value $targetPrioVal -Type DWord -Force
@@ -1112,7 +1104,7 @@ do {
                 $treePolicyValue = -1
                 Write-Host "`n[3/3] CPU Core Affinity Selection:" -ForegroundColor White
                 if ($dev.Class -eq 'Net' -and $dev.DriverType -eq 'NDIS') {
-                    Write-Host "   [!] NDIS Network Driver Detected: Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
+                    Write-Host "   [!] RSS detected and changeable (NDIS mode): Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
                     if (Test-Path $dev.RegPrioPath) {
                         Remove-ItemProperty -Path $dev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
                         Remove-ItemProperty -Path $dev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
@@ -1120,7 +1112,7 @@ do {
                     Write-Host "   -> Core Affinity locked to System Default" -ForegroundColor Gray
                 } else {
                     if ($dev.Class -eq 'Net' -and $dev.DriverType -eq 'WDF') {
-                        Write-Host "   [i] WDF Network Driver Detected: Custom Core Selection AVAILABLE." -ForegroundColor Green
+                        Write-Host "   [i] RSS missing or not changeable (WDF mode): Custom Core Selection AVAILABLE." -ForegroundColor Green
                     }
                     Write-Host "   Available P-Cores Primary Logical IDs: ($(($cpu.PCores.PrimaryLogicalCore) -join ', '))" -ForegroundColor Gray
                     Write-Host "   - Enter Core Number (1 to 63) to lock to that Core"
@@ -1167,17 +1159,19 @@ do {
     # MANUAL DEVICE SELECTION
     if ($selection -match '^\d+$') {
         $idx = [int]$selection - 1
-        if ($idx -ge 0 -and$idx -lt $devList.Count) {$targetDev = $devList[$idx]
+        if ($idx -ge 0 -and $idx -lt $devList.Count) {
+            $targetDev = $devList[$idx]
             
             Clear-Host
             Write-Host "==================================================================================" -ForegroundColor Cyan
             Write-Host " CONFIGURE DEVICE: $($targetDev.Name)" -ForegroundColor Yellow
-            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType): $($targetDev.DriverDetail))" } else { $targetDev.Class }$infStatus = if ($null -ne$targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
-            Write-Host " Class: $classInfo \vert{} PNP ID:$($targetDev.PNPID) \vert{} INF:$($targetDev.InfName) ($infStatus)" -ForegroundColor Gray
+            $classInfo = if ($targetDev.Class -eq 'Net') { "$($targetDev.Class) ($($targetDev.DriverType): $($targetDev.DriverDetail))" } else { $targetDev.Class }
+            $infStatus = if ($null -ne $targetDev.InfMsiValue) { "Explicit ($($targetDev.InfMsiValue))" } else { "Unknown" }
+            Write-Host " Class: $classInfo | PNP ID:$($targetDev.PNPID) | INF:$($targetDev.InfName) ($infStatus)" -ForegroundColor Gray
             Write-Host " Current MSI: $($targetDev.MSIMode) | Priority: $($targetDev.Priority) | Core: $($targetDev.Core)" -ForegroundColor Gray
             Write-Host "==================================================================================" -ForegroundColor Cyan
 
-            $changed =$false
+            $changed = $false
 
             Write-Host "`n[0/4] Reset Option:" -ForegroundColor White
             Write-Host "   R. Reset Device to System Default (INF-based MSI, Clear Priority, and Core Affinity)"
@@ -1208,33 +1202,33 @@ do {
                 $changed = $true
             } else {
                 Write-Host "`n[1/3] MSI Mode Selection:" -ForegroundColor White
-                if (-not $targetDev.HwMsiSupport -and$targetDev.InfMsiValue -ne 1) {
+                if (-not $targetDev.HwMsiSupport -and $targetDev.InfMsiValue -ne 1) {
                     Write-Host "   [!] WARNING: Hardware/INF indicates it only supports legacy Line-Based Interrupts." -ForegroundColor Red
                 }
-                if ($targetDev.IrqConflict -and$targetDev.HwMsiSupport) {
+                if ($targetDev.IrqConflict -and $targetDev.HwMsiSupport) {
                     Write-Host "   [!] RECOMMENDED: This device has an IRQ Conflict. Enabling MSI Mode will resolve it." -ForegroundColor Green
                 }
-                $msiEnableColor = Get-MsiEnableColor -Device$targetDev
+                $msiEnableColor = Get-MsiEnableColor -Device $targetDev
                 Write-Host "   1. Enable MSI Mode (MSISupported = 1)" -ForegroundColor $msiEnableColor
                 Write-Host "   2. Disable MSI Mode (MSISupported = 0)"
                 Write-Host "   [ENTER] Keep Current ($($targetDev.MSIMode))"
                 $msiChoice = Read-Host "Choice [1, 2, or ENTER]"
 
                 if ($msiChoice -eq '1') {
-                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path$targetDev.RegMSIPath -Force | Out-Null }
+                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path $targetDev.RegMSIPath -Force | Out-Null }
                     Set-ItemProperty -Path $targetDev.RegMSIPath -Name "MSISupported" -Value 1 -Type DWord -Force
                     Write-Host "   -> Set MSI Mode to ENABLED" -ForegroundColor Green
-                    $changed =$true
+                    $changed = $true
                 } elseif ($msiChoice -eq '2') {
-                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path$targetDev.RegMSIPath -Force | Out-Null }
+                    if (-not (Test-Path $targetDev.RegMSIPath)) { New-Item -Path $targetDev.RegMSIPath -Force | Out-Null }
                     Set-ItemProperty -Path $targetDev.RegMSIPath -Name "MSISupported" -Value 0 -Type DWord -Force
                     Write-Host "   -> Set MSI Mode to DISABLED" -ForegroundColor Yellow
-                    $changed =$true
+                    $changed = $true
                 } else {
                     Write-Host "   -> Kept current MSI mode" -ForegroundColor Gray
                 }
 
-                $targetPrioName =$targetDev.Priority
+                $targetPrioName = $targetDev.Priority
                 $targetPrioVal = switch ($targetDev.Priority) { 'High'{3} 'Normal'{2} 'Low'{1} 'Undefined'{0} default{0} }
 
                 Write-Host "`n[2/3] Priority Selection:" -ForegroundColor White
@@ -1258,16 +1252,16 @@ do {
 
                 $treePolicyValue = -1
                 Write-Host "`n[3/3] CPU Core Affinity Selection:" -ForegroundColor White
-                if ($targetDev.Class -eq 'Net' -and$targetDev.DriverType -eq 'NDIS') {
-                    Write-Host "   [!] NDIS Network Driver Detected: Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
+                if ($targetDev.Class -eq 'Net' -and $targetDev.DriverType -eq 'NDIS') {
+                    Write-Host "   [!] RSS detected and changeable (NDIS mode): Core affinity locked to Default to preserve RSS." -ForegroundColor Yellow
                     if (Test-Path $targetDev.RegPrioPath) {
                         Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -ErrorAction SilentlyContinue
                         Remove-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -ErrorAction SilentlyContinue
                     }
                     Write-Host "   -> Core Affinity locked to System Default" -ForegroundColor Gray
                 } else {
-                    if ($targetDev.Class -eq 'Net' -and$targetDev.DriverType -eq 'WDF') {
-                        Write-Host "   [i] WDF Network Driver Detected: Custom Core Selection AVAILABLE." -ForegroundColor Green
+                    if ($targetDev.Class -eq 'Net' -and $targetDev.DriverType -eq 'WDF') {
+                        Write-Host "   [i] RSS missing or not changeable (WDF mode): Custom Core Selection AVAILABLE." -ForegroundColor Green
                     }
                     Write-Host "   Available P-Cores Primary Logical IDs: ($(($cpu.PCores.PrimaryLogicalCore) -join ', '))" -ForegroundColor Gray
                     Write-Host "   - Enter Core Number (1 to 63) to lock to that Core"
@@ -1282,16 +1276,16 @@ do {
                         }
                         $treePolicyValue = 0
                         Write-Host "   -> Reset Core Affinity to System Default" -ForegroundColor Yellow
-                        $changed =$true
+                        $changed = $true
                     } elseif ($coreChoice -match '^\d+$' -and [int]$coreChoice -ge 1 -and [int]$coreChoice -lt 64) {
                         $cNum = [int]$coreChoice
-                        if (-not (Test-Path $targetDev.RegPrioPath)) { New-Item -Path$targetDev.RegPrioPath -Force | Out-Null }
+                        if (-not (Test-Path $targetDev.RegPrioPath)) { New-Item -Path $targetDev.RegPrioPath -Force | Out-Null }
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "DevicePolicy" -Value 4 -Type DWord -Force
+                        $cBytes = Get-AssignmentSetBytes -coreNum $cNum
                         Set-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force
-                        $cBytes = Get-AssignmentSetBytes -coreNum$cNum
-                        Set-ItemProperty -Path $targetDev.RegPrioPath -Name "AssignmentSetOverride" -Value $cBytes -Type Binary -Force$treePolicyValue = 3
+                        $treePolicyValue = 3
                         Write-Host "   -> Locked device to Logical Core $cNum" -ForegroundColor Green
-                        $changed =$true
+                        $changed = $true
                     } else {
                         $treePolicyValue = -1
                         Write-Host "   -> Kept current Core Affinity" -ForegroundColor Gray

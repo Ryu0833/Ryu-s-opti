@@ -31,6 +31,13 @@ if "%choice%"=="1" goto 1
 if "%choice%"=="2" goto 0.5
 
 :1
+REM . Supprimer le raccourci
+if exist "%SHORTCUT%" (
+    del /F /Q "%SHORTCUT%"
+    REM echo [OK] Raccourci supprimé.
+) else (
+     echo [INFO] Aucun raccourci trouvé.
+)
 
 bcdedit /set useplatformtick Yes
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "GlobalTimerResolutionRequests" /t REG_DWORD /d "1" /f
@@ -58,7 +65,7 @@ if errorlevel 1 (
 )
 REM --- Créer le raccourci ---
 REM echo [INFO] Création du raccourci dans le démarrage automatique...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5200 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%TARGET_EXE%'; $s.Arguments = '--resolution 5070 --no-console'; $s.WorkingDirectory = 'C:\'; $s.WindowStyle = 1; $s.Save()"
 goto exit0
 
 :restore
