@@ -375,8 +375,8 @@ Reg add "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR" /v "AppCaptureE
 Reg add "HKCU\System\GameConfigStore" /v "GameDVR_Enabled" /t REG_DWORD /d "0" /f
 Reg add "HKLM\SOFTWARE\Wow6432Node\Policies\Microsoft\Windows\GameDVR" /v "AllowgameDVR" /t REG_DWORD /d "0" /f
 
-Reg add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d "100" /f
-Reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDataQueueSize" /t REG_DWORD /d "100" /f
+Reg add "HKLM\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" /v "KeyboardDataQueueSize" /t REG_DWORD /d "25" /f
+Reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" /v "MouseDataQueueSize" /t REG_DWORD /d "25" /f
 Reg add "HKCU\Control Panel\Mouse" /v "MouseAccel" /t REG_SZ /d "0" /f
 Reg add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_SZ /d "-" /f 
 Reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold1" /t REG_SZ /d "0" /f 
@@ -558,8 +558,8 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Psched" /t REG_D
 
 for /f "tokens=*" %%i in ('@powershell -command "Get-NetAdapter | Where-Object { $_.Status -eq 'Up' } | Select-Object -First 1 -ExpandProperty Name"') do set NIC=%%i
 
-netsh interface ipv4 set dnsservers name="%NIC%" static 1.1.1.1 primary
-netsh interface ipv4 add dnsservers name="%NIC%" 1.0.0.1 index=2
+netsh interface ipv4 set dnsservers name="%NIC%" static 8.8.8.8 primary
+netsh interface ipv4 add dnsservers name="%NIC%" 8.8.4.4 index=2
 
 @powershell -command "Get-NetAdapterRss -Name '%NIC%' | Format-List"
 

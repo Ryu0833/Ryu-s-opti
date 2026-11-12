@@ -8,7 +8,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 $repoOwner = "Ryu0833"
 $repoName  = "Ryu-s-opti"
 $branch    = "master"
-$version    = "1.3.3"
+$version    = "1.4.0"
 
 #  options 
 $scripts = @(
