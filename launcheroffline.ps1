@@ -1,0 +1,1 @@
+irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcheroffline.ps1 | iex
