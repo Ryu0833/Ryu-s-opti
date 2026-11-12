@@ -1,1 +1,1 @@
-https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcher.ps1
+irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/main/Ryu%20Opti/launcher.ps1 | iex
