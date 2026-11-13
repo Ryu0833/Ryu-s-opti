@@ -16,7 +16,7 @@ Open PowerShell or Terminal as admin, then run:
 
 
 ```ps1
-irm irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/master/launcher.ps1 | iex
+irm https://raw.githubusercontent.com/Ryu0833/Ryu-s-opti/master/launcher.ps1 | iex
 ```
 
 OFFLINE Mode :
